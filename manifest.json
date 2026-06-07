@@ -1,0 +1,120 @@
+{
+  "id": "/",
+  "name": "GestorRutas Pro",
+  "short_name": "GestorRutas",
+  "description": "Gestión de rutas y conductores para flotas de transporte",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
+  "orientation": "portrait",
+  "background_color": "#0a0f1a",
+  "theme_color": "#00d68f",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": [
+    "business",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "GestorRutas Pro - Vista escritorio"
+    },
+    {
+      "src": "screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "GestorRutas Pro - Vista móvil"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nueva Ruta",
+      "short_name": "Ruta",
+      "description": "Crear una nueva ruta",
+      "url": "/?tab=rutas",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Conductores",
+      "short_name": "Conductores",
+      "description": "Ver conductores disponibles",
+      "url": "/?tab=conductores",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+gestorrutas",
+      "url": "/?route=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "text/csv": [
+          ".csv"
+        ],
+        "application/json": [
+          ".json"
+        ]
+      }
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}

@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GestorRutas Pro</title>
+<!-- PWA Meta Tags -->
+<meta name="application-name" content="GestorRutas Pro">
+<meta name="description" content="Gestión de rutas y conductores para flotas de transporte">
+<meta name="theme-color" content="#00d68f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GestorRutas">
+<link rel="manifest" href="/manifest.json">
+<script>
+// PWA: Service Worker — solo se registra cuando la app está en Netlify (http/https)
+// En preview local no funciona y causaba Script errors en iOS
+if('serviceWorker' in navigator && location.protocol !== 'blob:' && location.hostname !== '') {
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+</script>
+<style>
+:root {
+  --bg:#0a0f1a; --s1:#111827; --s2:#1a2235; --s3:#1e2a40;
+  --brd:#1e2d45; --grn:#00d68f; --red:#ff4d6d; --yel:#ffbe0b;
+  --blu:#4895ef; --pur:#a855f7; --txt:#e2e8f4; --txt2:#64748b;
+  --nav-h:64px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
+
+.screen{position:fixed;inset:0;top:52px;bottom:var(--nav-h);overflow-y:auto;display:none;padding:16px;}
+.screen.on{display:block;}
+
+.nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--s1);border-top:1px solid var(--brd);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;z-index:99;}
+.nav-btn{flex:0 0 auto;min-width:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--txt2);font-size:9px;font-weight:600;cursor:pointer;font-family:inherit;border-top:2px solid transparent;transition:all 0.15s;padding:0 6px 4px;}
+.nav-btn.on{color:var(--grn);border-top-color:var(--grn);}
+.nav-btn span{font-size:22px;line-height:1;}
+
+.screen-header{margin-bottom:18px;}
+.screen-title{font-size:22px;font-weight:800;letter-spacing:-0.5px;}
+.screen-title em{color:var(--grn);font-style:normal;}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat{background:var(--s1);border:1px solid var(--brd);border-radius:14px;padding:16px;border-top:3px solid var(--grn);}
+.stat.r{border-top-color:var(--red);}
+.stat.y{border-top-color:var(--yel);}
+.stat.b{border-top-color:var(--blu);}
+.stat.p{border-top-color:var(--pur);}
+.stat-label{font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600;}
+.stat-value{font-size:34px;font-weight:800;color:var(--grn);line-height:1;}
+.stat.r .stat-value{color:var(--red);}
+.stat.y .stat-value{color:var(--yel);}
+.stat.b .stat-value{color:var(--blu);}
+.stat.p .stat-value{color:var(--pur);}
+.stat-sub{font-size:11px;color:var(--txt2);margin-top:4px;}
+
+.card{background:var(--s1);border:1px solid var(--brd);border-radius:14px;margin-bottom:12px;overflow:hidden;}
+.card-head{padding:13px 16px;border-bottom:1px solid var(--brd);font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;}
+
+.cond-card{background:var(--s1);border:1px solid var(--brd);border-radius:14px;padding:16px;margin-bottom:10px;}
+.cond-card.vac{border-color:rgba(255,190,11,0.35);}
+.cond-card.baja{border-color:rgba(255,77,109,0.35);}
+.cond-card.taller{border-color:rgba(168,85,247,0.35);}
+.cond-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cond-cod{font-size:20px;font-weight:800;color:var(--grn);font-family:monospace;}
+.cond-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.bg{background:rgba(0,214,143,0.12);color:var(--grn);}
+.br{background:rgba(255,77,109,0.12);color:var(--red);}
+.by{background:rgba(255,190,11,0.12);color:var(--yel);}
+.bb{background:rgba(72,149,239,0.12);color:var(--blu);}
+.bp{background:rgba(168,85,247,0.12);color:var(--pur);}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all 0.15s;white-space:nowrap;}
+.btn-p{background:var(--grn);color:#0a0f1a;}
+.btn-s{background:var(--s2);color:var(--txt);border:1px solid var(--brd);}
+.btn-r{background:rgba(255,77,109,0.1);color:var(--red);border:1px solid rgba(255,77,109,0.25);}
+.btn-y{background:rgba(255,190,11,0.1);color:var(--yel);border:1px solid rgba(255,190,11,0.25);}
+.btn-pu{background:rgba(168,85,247,0.1);color:var(--pur);border:1px solid rgba(168,85,247,0.25);}
+.btn-sm{padding:7px 12px;font-size:12px;}
+.btn-full{width:100%;justify-content:center;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+
+.alert{padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:10px;display:flex;align-items:flex-start;gap:8px;font-weight:500;line-height:1.4;}
+.alert.y{background:rgba(255,190,11,0.08);border:1px solid rgba(255,190,11,0.25);color:var(--yel);}
+.alert.r{background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.25);color:var(--red);}
+.alert.g{background:rgba(0,214,143,0.08);border:1px solid rgba(0,214,143,0.25);color:var(--grn);}
+.alert.p{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);color:var(--pur);}
+
+.ruta-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.ruta-table{border-collapse:collapse;min-width:640px;width:100%;}
+.ruta-table th{padding:10px 8px;background:var(--s2);font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:1px;font-weight:600;border-bottom:1px solid var(--brd);text-align:left;white-space:nowrap;}
+.ruta-table td{padding:6px 6px;border-bottom:1px solid rgba(30,45,69,0.5);vertical-align:middle;}
+.ruta-table tr:last-child td{border-bottom:none;}
+.ruta-cod{color:var(--grn);font-weight:800;font-family:monospace;font-size:14px;}
+.tipo-pill{display:inline-block;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;min-width:52px;text-align:center;}
+.tipo-pill.c{background:rgba(0,214,143,0.15);color:var(--grn);}
+.tipo-pill.l{background:rgba(255,77,109,0.15);color:var(--red);}
+.rd-select{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:7px 6px;border-radius:8px;font-size:12px;font-family:inherit;width:100%;min-width:120px;}
+.rd-select:focus{outline:none;border-color:var(--grn);}
+.rd-input{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:7px 8px;border-radius:8px;font-size:12px;font-family:inherit;width:100%;min-width:100px;}
+.rd-input:focus{outline:none;border-color:var(--grn);}
+.rd-input::placeholder{color:var(--txt2);}
+
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid rgba(30,45,69,0.5);}
+.list-item:last-child{border-bottom:none;}
+.list-cod{font-family:monospace;font-weight:700;color:var(--grn);font-size:14px;}
+.list-sub{font-size:11px;color:var(--txt2);margin-top:2px;}
+
+.form-g{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.form-l{font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;}
+.form-input{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:12px 14px;border-radius:10px;font-size:14px;font-family:inherit;width:100%;}
+.form-input:focus{outline:none;border-color:var(--grn);}
+.form-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* HISTORIAL */
+.hist-item{padding:13px 16px;border-bottom:1px solid rgba(30,45,69,0.5);}
+.hist-item:last-child{border-bottom:none;}
+.hist-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
+.hist-fecha{font-size:10px;color:var(--txt2);font-family:monospace;}
+.hist-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;}
+.ht-m{background:rgba(72,149,239,0.12);color:var(--blu);}
+.ht-v{background:rgba(255,190,11,0.12);color:var(--yel);}
+.ht-b{background:rgba(255,77,109,0.12);color:var(--red);}
+.ht-a{background:rgba(0,214,143,0.12);color:var(--grn);}
+.ht-t{background:rgba(168,85,247,0.12);color:var(--pur);}
+.ht-n{background:rgba(72,149,239,0.12);color:var(--blu);}
+.hist-detail{font-size:12px;color:var(--txt2);}
+
+.res-item{padding:12px 16px;border-bottom:1px solid rgba(30,45,69,0.5);}
+.res-item:last-child{border-bottom:none;}
+.res-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.res-cod{font-family:monospace;font-weight:700;color:var(--grn);font-size:14px;}
+.res-bar-bg{height:6px;background:var(--s2);border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.res-bar{height:100%;background:var(--grn);border-radius:3px;}
+.res-nums{display:flex;justify-content:space-between;font-size:11px;font-family:monospace;}
+
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:200;align-items:flex-end;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--s1);border-radius:20px 20px 0 0;padding:24px;width:100%;border-top:1px solid var(--brd);max-height:85vh;overflow-y:auto;}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:18px;}
+.modal-title em{color:var(--grn);font-style:normal;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.modal-actions .btn{flex:1;justify-content:center;}
+
+.toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--s1);border:1px solid var(--grn);color:var(--grn);padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:300;opacity:0;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{border-color:var(--red);color:var(--red);}
+
+.clock-bar{background:var(--s1);border-bottom:1px solid var(--brd);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;position:fixed;top:0;left:0;right:0;z-index:50;}
+.clock-time{font-family:monospace;font-size:15px;font-weight:700;color:var(--grn);}
+.clock-date{font-size:11px;color:var(--txt2);}
+
+/* Nota rápida inline en tabla ruta */
+.nota-badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(72,149,239,0.12);color:var(--blu);cursor:pointer;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Filtros historial */
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.filter-btn{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid var(--brd);background:var(--s2);color:var(--txt2);cursor:pointer;font-family:inherit;}
+.filter-btn.on{background:rgba(0,214,143,0.12);color:var(--grn);border-color:var(--grn);}
+</style>
+</head>
+<body>
+
+<div class="clock-bar" id="clock-bar">
+  <div>
+    <div class="clock-time" id="clock">--:--:--</div>
+    <div class="clock-date" id="clock-date">—</div>
+  </div>
+  <div style="font-size:13px;font-weight:800;color:var(--txt)">Gestor<span style="color:var(--grn)">Rutas</span> Pro</div>
+</div>
+
+<div style="height:52px"></div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="screen on" id="sc-dash">
+  <div class="screen-header">
+    <div class="screen-title">Dashboard <em>Mañana</em></div>
+  </div>
+  <div class="stats" id="dash-stats"></div>
+  <div id="dash-alerts"></div>
+  <div class="btn-row">
+    <button class="btn btn-p btn-full" onclick="goScreen('ruta')">🚛 Preparar ruta del día</button>
+  </div>
+  <div class="card">
+    <div class="card-head">Disponibles mañana</div>
+    <div id="dash-disp"></div>
+  </div>
+  <div class="card">
+    <div class="card-head">Ausentes / Taller</div>
+    <div id="dash-aus"></div>
+  </div>
+</div>
+
+<!-- ═══ CONDUCTORES ═══ -->
+<div class="screen" id="sc-cond">
+  <div class="screen-header" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="screen-title">Conductores</div>
+    <button class="btn btn-p btn-sm" onclick="openModal('m-new-cond')">+ Nuevo</button>
+  </div>
+  <div id="cond-activos"></div>
+  <div id="cond-otros"></div>
+</div>
+
+<!-- ═══ RUTA DEL DIA ═══ -->
+<div class="screen" id="sc-ruta">
+  <div class="screen-header">
+    <div class="screen-title">Ruta del <em>Día</em></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end">
+      <div class="form-g" style="margin:0">
+        <label class="form-l">Fecha (auto: mañana)</label>
+        <input type="date" class="form-input" id="rd-fecha" onchange="buildRuta()">
+      </div>
+      <div class="form-g" style="margin:0">
+        <label class="form-l">Ciudad</label>
+        <select class="form-input" id="rd-ciudad">
+          <option>SEVILLA</option><option>MADRID</option><option>GRANADA</option><option>BARCELONA</option>
+        </select>
+      </div>
+    </div>
+    <div style="padding:0 14px 12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--txt2)">Conductores disponibles:</span>
+      <span id="rd-count" style="font-size:22px;font-weight:800;color:var(--grn)">—</span>
+    </div>
+  </div>
+
+  <div id="rd-alerts"></div>
+
+  <div class="card">
+    <div class="card-head">
+      <span>Asignación de rutas</span>
+      <span style="font-size:10px;color:var(--txt2)">desliza →</span>
+    </div>
+    <div class="ruta-wrap">
+      <table class="ruta-table">
+        <thead>
+          <tr>
+            <th>COD.</th>
+            <th>TIPO</th>
+            <th>RUTA / DESTINO</th>
+            <th>MATRÍCULA</th>
+            <th>AYUDANTE</th>
+            <th>NOTA</th>
+          </tr>
+        </thead>
+        <tbody id="rd-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sección camiones en taller -->
+  <div class="card">
+    <div class="card-head">
+      <span>🔧 Camiones en Taller</span>
+      <button class="btn btn-pu btn-sm" onclick="openModal('m-add-taller')">+ Añadir</button>
+    </div>
+    <div id="taller-lista"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+    <button class="btn btn-s btn-full" onclick="copiarTexto()">📋 Copiar texto</button>
+    <button class="btn btn-p btn-full" onclick="generarImagen()">📸 Generar imagen</button>
+  </div>
+</div>
+
+<!-- ═══ GESTIÓN ═══ -->
+<div class="screen" id="sc-gestion">
+  <div class="screen-header">
+    <div class="screen-title"><em>Gestión</em></div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <span>🚚 Camiones</span>
+      <button class="btn btn-p btn-sm" onclick="openModal('m-new-cam')">+ Añadir</button>
+    </div>
+    <div id="cam-lista"></div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <span>🗺️ Rutas</span>
+      <button class="btn btn-p btn-sm" onclick="openModal('m-new-ruta')">+ Añadir</button>
+    </div>
+    <div id="rutas-lista"></div>
+  </div>
+</div>
+
+<!-- ═══ HISTORIAL ═══ -->
+<div class="screen" id="sc-hist">
+  <div class="screen-header">
+    <div class="screen-title"><em>Historial</em></div>
+  </div>
+
+  <div class="filter-row" id="hist-filtros">
+    <button class="filter-btn on" data-f="all" onclick="filtrarHist('all')">Todos</button>
+    <button class="filter-btn" data-f="vac" onclick="filtrarHist('vac')">🏖️ Vac.</button>
+    <button class="filter-btn" data-f="baja" onclick="filtrarHist('baja')">🏥 Baja</button>
+    <button class="filter-btn" data-f="taller" onclick="filtrarHist('taller')">🔧 Taller</button>
+    <button class="filter-btn" data-f="nota" onclick="filtrarHist('nota')">📝 Notas</button>
+    <button class="filter-btn" data-f="alta" onclick="filtrarHist('alta')">✅ Alta</button>
+  </div>
+
+  <div class="card">
+    <div class="card-head" style="justify-content:space-between">
+      <span>Registro completo</span>
+      <button class="btn btn-r btn-sm" onclick="openModal('m-confirmar-hist')">🗑️ Limpiar</button>
+    </div>
+    <div id="hist-lista"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Resumen cortas/largas (mes)</div>
+    <div id="res-lista"></div>
+  </div>
+</div>
+
+<!-- ═══ PLANIFICACION ═══ -->
+<div class="screen" id="sc-plan">
+  <div class="screen-header" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="screen-title">Planific. <em>Mensual</em></div>
+    <button class="btn btn-p btn-sm" onclick="recalcularPlan()">⚡ Recalcular</button>
+  </div>
+  <div class="stats" style="grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+    <div class="stat"><div class="stat-label">Laborables</div><div class="stat-value" id="plan-dias" style="font-size:26px">—</div></div>
+    <div class="stat y"><div class="stat-label">Media cortas/día</div><div class="stat-value" style="font-size:26px;color:var(--yel)" id="plan-cortas">—</div></div>
+    <div class="stat b"><div class="stat-label">Conductores</div><div class="stat-value" style="font-size:26px;color:var(--blu)" id="plan-ncond">—</div></div>
+  </div>
+  <div class="alert y" id="plan-aviso" style="display:none">⚠️ <span id="plan-aviso-txt"></span></div>
+  <div class="card">
+    <div class="card-head">
+      <span>Tabla junio 2026</span>
+      <span style="font-size:10px;color:var(--txt2)">toca celda · desliza →</span>
+    </div>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table id="plan-tabla" style="border-collapse:collapse;font-size:11px;min-width:500px"></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">Resumen del mes</div>
+    <div id="plan-resumen"></div>
+  </div>
+</div>
+
+<!-- ═══ CAMIONES ═══ -->
+<div class="screen" id="sc-cam">
+  <div class="screen-header" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="screen-title"><em>Camiones</em></div>
+    <button class="btn btn-p btn-sm" onclick="openModal('m-new-cam')">+ Añadir</button>
+  </div>
+  <div class="card">
+    <div class="card-head">🟢 Disponibles</div>
+    <div id="cam-disp-lista"></div>
+  </div>
+  <div class="card">
+    <div class="card-head" style="justify-content:space-between">
+      <span>🔧 En Taller</span>
+      <button class="btn btn-pu btn-sm" onclick="openModal('m-add-taller')">+ Añadir</button>
+    </div>
+    <div id="cam-taller-lista"></div>
+  </div>
+</div>
+
+<!-- ═══ BOTTOM NAV ═══ -->
+<nav class="nav">
+  <button class="nav-btn on" id="nav-dash" onclick="goScreen('dash')"><span>📊</span>Dashboard</button>
+  <button class="nav-btn" id="nav-cond" onclick="goScreen('cond')"><span>👤</span>Conductores</button>
+  <button class="nav-btn" id="nav-ruta" onclick="goScreen('ruta')"><span>🚛</span>Ruta día</button>
+  <button class="nav-btn" id="nav-cam" onclick="goScreen('cam')"><span>🚚</span>Camiones</button>
+  <button class="nav-btn" id="nav-plan" onclick="goScreen('plan')"><span>📅</span>Planific.</button>
+  <button class="nav-btn" id="nav-hist" onclick="goScreen('hist')"><span>📋</span>Historial</button>
+</nav>
+
+<!-- ═══ MODALES ═══ -->
+
+<div class="modal-ov" id="m-new-cond">
+  <div class="modal">
+    <div class="modal-title">Nuevo <em>conductor</em></div>
+    <div class="form-g"><label class="form-l">Código JS</label><input type="text" class="form-input" id="nc-cod" placeholder="JS999"></div>
+    <div class="form-g"><label class="form-l">Matrícula</label><input type="text" class="form-input" id="nc-mat" placeholder="0000ABC (opcional)"></div>
+    <div class="form-g"><label class="form-l">Estado</label>
+      <select class="form-input" id="nc-estado"><option value="activo">ACTIVO</option><option value="vac">VACACIONES</option><option value="baja">BAJA MÉDICA</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-new-cond')">Cancelar</button>
+      <button class="btn btn-p" onclick="addConductor()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-vac">
+  <div class="modal">
+    <div class="modal-title" id="m-vac-title">Vacaciones — <em>JS???</em></div>
+    <input type="hidden" id="vac-cod">
+    <div class="form-row2">
+      <div class="form-g"><label class="form-l">Desde</label><input type="date" class="form-input" id="vac-ini"></div>
+      <div class="form-g"><label class="form-l">Hasta</label><input type="date" class="form-input" id="vac-fin"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-vac')">Cancelar</button>
+      <button class="btn btn-p" onclick="guardarVac()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-baja">
+  <div class="modal">
+    <div class="modal-title" id="m-baja-title">Baja médica — <em>JS???</em></div>
+    <input type="hidden" id="baja-cod">
+    <div class="form-g"><label class="form-l">Fecha inicio</label><input type="date" class="form-input" id="baja-ini"></div>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-baja')">Cancelar</button>
+      <button class="btn btn-p" onclick="guardarBaja()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nota libre por conductor en ruta -->
+<div class="modal-ov" id="m-nota">
+  <div class="modal">
+    <div class="modal-title">📝 Nota para <em id="m-nota-cod">—</em></div>
+    <input type="hidden" id="nota-cod">
+    <p style="font-size:12px;color:var(--txt2);margin-bottom:16px;line-height:1.5">Aparecerá en la imagen de la ruta. Ej: "Asuntos personales", "Libre tarde", "Sale 13h"</p>
+    <div class="form-g">
+      <label class="form-l">Nota</label>
+      <input type="text" class="form-input" id="nota-texto" placeholder="Ej: Asuntos personales">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-r" onclick="borrarNota()">Borrar</button>
+      <button class="btn btn-s" onclick="closeModal('m-nota')">Cancelar</button>
+      <button class="btn btn-p" onclick="guardarNota()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal añadir camión a taller -->
+<div class="modal-ov" id="m-add-taller">
+  <div class="modal">
+    <div class="modal-title">🔧 Camión en <em>Taller</em></div>
+    <div class="form-g">
+      <label class="form-l">Matrícula</label>
+      <select class="form-input" id="taller-mat">
+        <option value="">— selecciona —</option>
+      </select>
+    </div>
+    <div class="form-g">
+      <label class="form-l">Motivo (opcional)</label>
+      <input type="text" class="form-input" id="taller-motivo" placeholder="Ej: Revisión, Frenos, ITV...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-add-taller')">Cancelar</button>
+      <button class="btn btn-p" onclick="addTaller()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-new-cam">
+  <div class="modal">
+    <div class="modal-title">Nueva <em>matrícula</em></div>
+    <div class="form-g"><label class="form-l">Matrícula</label><input type="text" class="form-input" id="cam-mat" placeholder="0000ABC"></div>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-new-cam')">Cancelar</button>
+      <button class="btn btn-p" onclick="addCamion()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-new-ruta">
+  <div class="modal">
+    <div class="modal-title">Nueva <em>ruta</em></div>
+    <div class="form-g"><label class="form-l">Nombre</label><input type="text" class="form-input" id="ruta-nombre" placeholder="NOMBRE RUTA"></div>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-new-ruta')">Cancelar</button>
+      <button class="btn btn-p" onclick="addRuta()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="m-cortas-dia">
+  <div class="modal" style="padding:24px">
+    <div class="modal-title" style="font-size:16px;margin-bottom:6px">✏️ Cortas del día <em id="mcd-dia-label">—</em></div>
+    <p style="font-size:12px;color:var(--txt2);margin-bottom:18px">Toca un número para seleccionar cuántas rutas cortas hay ese día</p>
+    <div id="mcd-btns" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px"></div>
+    <button class="btn btn-s btn-full" onclick="closeModal('m-cortas-dia')">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal confirmar borrar historial -->
+<div class="modal-ov" id="m-confirmar-hist">
+  <div class="modal">
+    <div class="modal-title">🗑️ <em>Borrar historial</em></div>
+    <p style="font-size:14px;color:var(--txt2);margin-bottom:20px;line-height:1.5">¿Seguro que quieres borrar todo el historial? Esta acción no se puede deshacer.</p>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-confirmar-hist')">Cancelar</button>
+      <button class="btn btn-r" onclick="borrarHistConfirmado()">🗑️ Sí, borrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal info celda COMP -->
+<div class="modal-ov" id="m-comp-info">
+  <div class="modal">
+    <div class="modal-title">🔀 <em id="comp-info-cod">—</em> — Día <em id="comp-info-dia">—</em></div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:8px;line-height:1.6">
+      <strong style="color:var(--yel)">COMP</strong> = Ruta compartida.<br>
+      Este conductor va en el camión de otro ese día. Su ruta larga queda <strong style="color:var(--txt)">liberada / sin asignar</strong>.
+    </p>
+    <p style="font-size:12px;color:var(--txt2);margin-bottom:20px;line-height:1.5">
+      En la planificación cuenta como <strong style="color:var(--grn)">CORTA</strong> para el recuento mensual (sale pero en camión ajeno).
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-comp-info')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+let conductores = [
+  {cod:'JS190',mat:'9988NDR',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS212',mat:'1867MGV',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS228',mat:'9114NFH',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS249',mat:'2135MRL',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS256',mat:'7482MPM',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS258',mat:'0094MMR',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS260',mat:'7525MSZ',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS262',mat:'5190MSD',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS263',mat:'0318NFF',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS264',mat:'0957NFD',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS265',mat:'1855MGS',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS267',mat:'2050MHK',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS269',mat:'0737MMD',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS271',mat:'2262MRL',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS286',mat:'2199MRL',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS293',mat:'3638MSY',estado:'activo',vac:null,bajaDesde:null},
+  {cod:'JS203',mat:'—',estado:'vac',vac:{ini:'—',fin:'?'},bajaDesde:null},
+  {cod:'JS204',mat:'—',estado:'baja',vac:null,bajaDesde:'—'},
+  {cod:'JS245',mat:'—',estado:'baja',vac:null,bajaDesde:'—'},
+  {cod:'JS253',mat:'—',estado:'baja',vac:null,bajaDesde:'—'},
+  {cod:'JS172',mat:'—',estado:'baja',vac:null,bajaDesde:'—'},
+  {cod:'JS157',mat:'—',estado:'baja',vac:null,bajaDesde:'—'},
+];
+
+let camiones = ['9988NDR','1867MGV','9114NFH','2135MRL','7482MPM','0094MMR','7525MSZ','5190MSD','0318NFF','0957NFD','1855MGS','2050MHK','0737MMD','2262MRL','2199MRL','3638MSY'];
+
+let rutas = ['HUELVA CAPITAL','SIERRA HUELVA','CADIZ COSTA','BADAJOZ MERIDA','BADAJOZ BAJO','JÓDAR','JAEN ALTO','JAEN CAP.','UBRIQUE','MONTANCHEZ','CÓRDOBA','SIERRA CORD.','CORDOBA+SIERRA CORD.','CÁCERES','CACERES+CAC.EXTRA','BAILEN','BAZA','COSTA TROPICAL','MÁLAGA','TRUJILLO','A-49','A-92EXTRA','LUCENA','A-92'];
+
+let historial = [
+  {fecha:'04/06 21:18',cod:'JS190',tipo:'manual',det:'LARGA → CORTA (manual)'},
+  {fecha:'03/06 22:05',cod:'JS264',tipo:'manual',det:'CORTA → LARGA (manual)'},
+  {fecha:'01/06',cod:'JS203',tipo:'vac',det:'Vacaciones — sin fecha de vuelta'},
+];
+
+// Camiones en taller: [{mat, motivo, desde}]
+let tallerList = [];
+
+// Notas por conductor para la ruta del día: {JS190: "Asuntos personales", ...}
+let notasRuta = {};
+
+const rdState = {};
+conductores.forEach((c,i) => {
+  rdState[c.cod] = {ruta:rutas[i%rutas.length], matricula:c.mat!=='—'?c.mat:camiones[0], ayudante:'NO', ayudanteJS:''};
+});
+
+const tipos = {};
+conductores.forEach((c,i) => { tipos[c.cod] = c.cod==='JS228'?'CORTA':(i%2===0?'LARGA':'CORTA'); });
+
+// ═══════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════
+const LS_KEY = 'gestorrutas_v4';
+
+function saveLS() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      conductores, camiones, rutas, historial, planData, planGenerado,
+      rdState, tipos, cortasDia, tallerList, notasRuta
+    }));
+  } catch(e){ console.warn('localStorage no disponible', e); }
+}
+
+function loadLS() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(d.conductores) conductores = d.conductores;
+    if(d.camiones) camiones = d.camiones;
+    if(d.rutas) rutas = d.rutas;
+    if(d.historial) historial = d.historial;
+    if(d.planData) planData = d.planData;
+    if(d.planGenerado !== undefined) planGenerado = d.planGenerado;
+    if(d.rdState) Object.assign(rdState, d.rdState);
+    if(d.tipos) Object.assign(tipos, d.tipos);
+    if(d.cortasDia) Object.assign(cortasDia, d.cortasDia);
+    if(d.tallerList) tallerList = d.tallerList;
+    if(d.notasRuta) Object.assign(notasRuta, d.notasRuta);
+    return true;
+  } catch(e){ return false; }
+}
+
+// ═══════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('sc-'+id).classList.add('on');
+  const navBtn = document.getElementById('nav-'+id);
+  if(navBtn) navBtn.classList.add('on');
+  window.scrollTo(0,0);
+  const builders = {dash:buildDash,cond:buildCond,ruta:buildRuta,plan:buildPlan,gestion:buildGestion,hist:buildHist,cam:buildCam};
+  if(builders[id]) builders[id]();
+}
+
+// ═══════════════════════════════════════
+// FECHA MAÑANA (siempre)
+// ═══════════════════════════════════════
+function mananaISO() {
+  const d = new Date(); d.setDate(d.getDate()+1);
+  return d.toISOString().split('T')[0];
+}
+function mananaFmt() {
+  const d = new Date(); d.setDate(d.getDate()+1);
+  const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  return `${dias[d.getDay()]} ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function fechaISO_to_fmt(iso) {
+  if(!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// ═══════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════
+function buildDash() {
+  const activos = conductores.filter(c=>c.estado==='activo');
+  const vacs = conductores.filter(c=>c.estado==='vac');
+  const bajas = conductores.filter(c=>c.estado==='baja');
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat"><div class="stat-label">Disponibles mañana</div><div class="stat-value">${activos.length}</div><div class="stat-sub">${mananaFmt()}</div></div>
+    <div class="stat y"><div class="stat-label">Vacaciones</div><div class="stat-value" style="color:var(--yel)">${vacs.length}</div><div class="stat-sub">${vacs.map(c=>c.cod).join(' · ')||'—'}</div></div>
+    <div class="stat r"><div class="stat-label">Bajas médicas</div><div class="stat-value">${bajas.length}</div><div class="stat-sub">${bajas.slice(0,2).map(c=>c.cod).join(' · ')}${bajas.length>2?'...':''}</div></div>
+    <div class="stat p"><div class="stat-label">En Taller</div><div class="stat-value" style="color:var(--pur)">${tallerList.length}</div><div class="stat-sub">${tallerList.slice(0,2).map(t=>t.mat).join(' · ')||'ninguno'}</div></div>
+  `;
+
+  document.getElementById('dash-disp').innerHTML = activos.map(c=>`
+    <div class="list-item">
+      <span class="list-cod">${c.cod}</span>
+      <span style="font-size:11px;color:var(--txt2)">${c.cod==='JS228'?'⭐ siempre corta':''}</span>
+    </div>`).join('');
+
+  const ausList = [
+    ...vacs.map(c=>`<div class="list-item"><span class="list-cod">${c.cod}</span><span class="badge by">VACACIONES</span></div>`),
+    ...bajas.map(c=>`<div class="list-item"><span class="list-cod">${c.cod}</span><span class="badge br">BAJA MÉDICA</span></div>`),
+    ...tallerList.map(t=>`<div class="list-item"><span class="list-cod" style="color:var(--pur)">${t.mat}</span><span class="badge bp">TALLER${t.motivo?' — '+t.motivo:''}</span></div>`)
+  ];
+  document.getElementById('dash-aus').innerHTML = ausList.join('') || '<div class="list-item" style="color:var(--txt2);font-size:12px">Sin ausencias ni camiones en taller</div>';
+}
+
+// ═══════════════════════════════════════
+// TALLER
+// ═══════════════════════════════════════
+function buildTallerLista() {
+  const el = document.getElementById('taller-lista');
+  if(!el) return;
+  if(tallerList.length === 0) {
+    el.innerHTML = '<div class="list-item" style="color:var(--txt2);font-size:12px">No hay camiones en taller</div>';
+    return;
+  }
+  el.innerHTML = tallerList.map((t,i) => `
+    <div class="list-item">
+      <div>
+        <span class="list-cod" style="color:var(--pur)">${t.mat}</span>
+        ${t.motivo?`<div class="list-sub">${t.motivo}</div>`:''}
+        <div class="list-sub">Desde ${t.desde||'—'}</div>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="quitarTaller(${i})">✅ Listo</button>
+    </div>`).join('');
+}
+
+function openAddTaller() {
+  // Rellenar select con todos los camiones
+  const sel = document.getElementById('taller-mat');
+  sel.innerHTML = '<option value="">— selecciona —</option>' +
+    camiones.map(m=>`<option value="${m}">${m}</option>`).join('');
+  document.getElementById('taller-motivo').value = '';
+  openModal('m-add-taller');
+}
+
+function addTaller() {
+  const mat = document.getElementById('taller-mat').value;
+  const motivo = document.getElementById('taller-motivo').value.trim();
+  if(!mat){ toast('⚠️ Selecciona una matrícula', true); return; }
+  if(tallerList.find(t=>t.mat===mat)){ toast('⚠️ Ya está en taller', true); return; }
+  const desde = fechaISO_to_fmt(mananaISO());
+  tallerList.push({mat, motivo, desde});
+  historial.unshift({fecha:hoyFmt(), cod: mat, tipo:'taller', det:`Camión ${mat} en taller${motivo?' — '+motivo:''} desde ${desde}`});
+  closeModal('m-add-taller');
+  saveLS(); buildTallerLista(); buildDash();
+  toast('🔧 '+mat+' en taller');
+}
+
+function quitarTaller(i) {
+  const t = tallerList[i];
+  historial.unshift({fecha:hoyFmt(), cod: t.mat, tipo:'alta', det:`Camión ${t.mat} sale del taller`});
+  tallerList.splice(i,1);
+  saveLS(); buildTallerLista(); buildDash();
+  toast('✅ '+t.mat+' sale del taller');
+}
+
+// ═══════════════════════════════════════
+// NOTAS POR CONDUCTOR
+// ═══════════════════════════════════════
+function openNota(cod) {
+  document.getElementById('nota-cod').value = cod;
+  document.getElementById('m-nota-cod').textContent = cod;
+  document.getElementById('nota-texto').value = notasRuta[cod] || '';
+  openModal('m-nota');
+}
+
+function guardarNota() {
+  const cod = document.getElementById('nota-cod').value;
+  const txt = document.getElementById('nota-texto').value.trim();
+  if(txt) {
+    notasRuta[cod] = txt;
+    historial.unshift({fecha:hoyFmt(), cod, tipo:'nota', det:`Nota añadida: "${txt}"`});
+  } else {
+    delete notasRuta[cod];
+  }
+  closeModal('m-nota');
+  saveLS(); buildRuta();
+  toast(txt ? '📝 Nota guardada' : '🗑️ Nota borrada');
+}
+
+function borrarNota() {
+  const cod = document.getElementById('nota-cod').value;
+  delete notasRuta[cod];
+  closeModal('m-nota');
+  saveLS(); buildRuta();
+  toast('🗑️ Nota borrada');
+}
+
+// ═══════════════════════════════════════
+// PLANIFICACION
+// ═══════════════════════════════════════
+function diasLaborables() {
+  const dias = [];
+  for(let d=1; d<=30; d++) {
+    const f = new Date(2026, 5, d);
+    if(f.getDay()!==0 && f.getDay()!==6) dias.push(d);
+  }
+  return dias;
+}
+
+let planData = {};
+let planGenerado = false;
+const DEFAULT_CORTAS = 5;
+let cortasDia = {};
+
+function algoritmo() {
+  const activos = conductores.filter(c=>c.estado==='activo');
+  const dias = diasLaborables();
+  dias.forEach(d => { if(cortasDia[d] === undefined) cortasDia[d] = DEFAULT_CORTAS; });
+  planData = {};
+  activos.forEach(c => { planData[c.cod] = {}; });
+  const acum = {};
+  activos.forEach(c => { acum[c.cod] = 0; });
+  dias.forEach(dia => {
+    const totalCortas = cortasDia[dia] ?? DEFAULT_CORTAS;
+    planData['JS228'][dia] = 'CORTA'; acum['JS228']++;
+    const resto = activos.filter(c => c.cod !== 'JS228');
+    resto.sort((a, b) => {
+      const diff = acum[a.cod] - acum[b.cod];
+      return diff !== 0 ? diff : Math.random() - 0.5;
+    });
+    const cortasResto = Math.max(0, totalCortas - 1);
+    resto.forEach((c, i) => {
+      if(i < cortasResto) { planData[c.cod][dia] = 'CORTA'; acum[c.cod]++; }
+      else { planData[c.cod][dia] = 'LARGA'; }
+    });
+  });
+  planGenerado = true;
+}
+
+function recalcularPlan() {
+  algoritmo(); renderPlan(); saveLS(); toast('⚡ Planificación recalculada');
+}
+
+function setCortasDia(dia, val) {
+  const n = parseInt(val);
+  if(isNaN(n) || n < 1) return;
+  cortasDia[dia] = Math.min(n, conductores.filter(c=>c.estado==='activo').length);
+  const activos = conductores.filter(c=>c.estado==='activo');
+  const totalCortas = cortasDia[dia];
+  const dias = diasLaborables();
+  const acum = {};
+  activos.forEach(c => { acum[c.cod] = 0; });
+  dias.forEach(d => {
+    if(d === dia) return;
+    activos.forEach(c => { if((planData[c.cod]||{})[d] === 'CORTA') acum[c.cod]++; });
+  });
+  planData['JS228'][dia] = 'CORTA';
+  const resto = activos.filter(c => c.cod !== 'JS228');
+  resto.sort((a,b) => acum[a.cod] - acum[b.cod] || Math.random() - 0.5);
+  const cortasResto = Math.max(0, totalCortas - 1);
+  resto.forEach((c, i) => { planData[c.cod][dia] = i < cortasResto ? 'CORTA' : 'LARGA'; });
+  saveLS(); renderPlan();
+}
+
+function toggleCelda(cod, dia) {
+  if(!planData[cod] || !planData[cod][dia]) return;
+  if(cod === 'JS228') { toast('⭐ JS228 siempre CORTA'); return; }
+  const ciclo = {'CORTA':'LARGA','LARGA':'COMP','COMP':'CORTA'};
+  const anterior = planData[cod][dia];
+  const nuevo = ciclo[anterior] || 'CORTA';
+  planData[cod][dia] = nuevo;
+  // Registrar en historial solo cambios manuales
+  historial.unshift({fecha:hoyFmt(), cod, tipo:'manual',
+    det:`Planif. día ${String(dia).padStart(2,'0')}/06: ${anterior} → ${nuevo}${nuevo==='COMP'?' (ruta compartida/libre)':''}`});
+  saveLS(); renderPlan();
+}
+
+function renderPlan() {
+  const activos = conductores.filter(c=>c.estado==='activo');
+  const dias = diasLaborables();
+  const hoyDia = new Date().getDate();
+  const hoyMes = new Date().getMonth();
+  document.getElementById('plan-dias').textContent = dias.length;
+  document.getElementById('plan-ncond').textContent = activos.length;
+  const mediaCortas = dias.length > 0
+    ? (dias.reduce((s,d) => s + (cortasDia[d] ?? DEFAULT_CORTAS), 0) / dias.length).toFixed(1)
+    : DEFAULT_CORTAS;
+  document.getElementById('plan-cortas').textContent = mediaCortas;
+  const cortasTotales = {};
+  activos.forEach(c => { cortasTotales[c.cod] = Object.values(planData[c.cod]||{}).filter(v=>v==='CORTA'||v==='COMP').length; });
+  const media = activos.filter(c=>c.cod!=='JS228').reduce((s,c)=>s+cortasTotales[c.cod],0) / (activos.length-1||1);
+  const desequil = activos.filter(c=>c.cod!=='JS228' && Math.abs((cortasTotales[c.cod]||0)-media)>2);
+  const avisoEl = document.getElementById('plan-aviso');
+  if(desequil.length>0) {
+    avisoEl.style.display='flex';
+    document.getElementById('plan-aviso-txt').textContent = desequil.map(c=>`${c.cod}: ${cortasTotales[c.cod]} cortas`).join(' · ');
+  } else { avisoEl.style.display='none'; }
+
+  let html = '<thead><tr>';
+  html += '<th style="position:sticky;left:0;background:#1a2235;z-index:2;padding:8px 10px;font-size:10px;color:#64748b;text-align:left;border-bottom:1px solid #1e2d45;border-right:1px solid #1e2d45">COD.</th>';
+  dias.forEach(d => {
+    const isHoy = d===hoyDia && hoyMes===5;
+    html += `<th style="padding:7px 4px;text-align:center;min-width:46px;font-size:10px;font-weight:600;${isHoy?'color:#ffbe0b;background:rgba(255,190,11,0.08);':'color:#64748b;'}border-bottom:1px solid #1e2d45;border-right:1px solid #1e2d45">
+      ${String(d).padStart(2,'0')}${isHoy?'<br><span style="font-size:8px;background:#ffbe0b;color:#0a0f1a;border-radius:2px;padding:0 3px">HOY</span>':''}
+    </th>`;
+  });
+  html += '<th style="padding:8px 6px;text-align:center;font-size:10px;color:#00d68f;border-bottom:1px solid #1e2d45">C</th>';
+  html += '<th style="padding:8px 6px;text-align:center;font-size:10px;color:#ff4d6d;border-bottom:1px solid #1e2d45">L</th>';
+  html += '</tr>';
+  html += '<tr>';
+  html += '<td style="position:sticky;left:0;background:#0d1a2e;z-index:2;padding:5px 10px;font-size:9px;color:#4895ef;font-weight:700;border-bottom:2px solid #1e2d45;border-right:1px solid #1e2d45;white-space:nowrap">✏️ CORTAS</td>';
+  dias.forEach(d => {
+    const val = cortasDia[d] ?? DEFAULT_CORTAS;
+    html += `<td style="text-align:center;background:#0d1a2e;border-bottom:2px solid #1e2d45;border-right:1px solid rgba(30,45,69,0.3);padding:3px 2px">
+      <span onclick="editCortasDia(${d})" style="display:inline-block;min-width:26px;padding:2px 5px;background:rgba(72,149,239,0.15);color:#4895ef;border-radius:4px;font-size:11px;font-weight:800;cursor:pointer;font-family:monospace">${val}</span>
+    </td>`;
+  });
+  html += '<td style="background:#0d1a2e;border-bottom:2px solid #1e2d45"></td><td style="background:#0d1a2e;border-bottom:2px solid #1e2d45"></td>';
+  html += '</tr></thead><tbody>';
+  activos.forEach(c => {
+    const cortas = cortasTotales[c.cod]||0;
+    const comp = Object.values(planData[c.cod]||{}).filter(v=>v==='COMP').length;
+    const largas = dias.length - cortas - comp;
+    html += '<tr>';
+    html += `<td style="position:sticky;left:0;background:#111827;z-index:1;padding:6px 10px;font-family:monospace;font-weight:700;font-size:12px;color:#00d68f;border-bottom:1px solid rgba(30,45,69,0.5);border-right:1px solid #1e2d45">${c.cod}</td>`;
+    dias.forEach(d => {
+      const val = (planData[c.cod]||{})[d] || '—';
+      const isC = val==='CORTA';
+      const isComp = val==='COMP';
+      const isL = val==='LARGA';
+      let pill;
+      if(val==='—') {
+        pill = '<span style="font-size:10px;color:#64748b">—</span>';
+      } else if(isComp) {
+        pill = `<span onclick="showCompInfo('${c.cod}',${d})" title="Ruta compartida — toca para info" style="display:inline-block;padding:3px 4px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;min-width:28px;text-align:center;background:rgba(255,190,11,0.18);color:#ffbe0b">CO</span>`;
+      } else {
+        pill = `<span onclick="toggleCelda('${c.cod}',${d})" style="display:inline-block;padding:3px 4px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;min-width:28px;text-align:center;background:${isC?'rgba(0,214,143,0.15)':'rgba(255,77,109,0.15)'};color:${isC?'#00d68f':'#ff4d6d'}">${isC?'C':'L'}</span>`;
+      }
+      // If COMP, tapping the cell also needs to continue the cycle
+      if(isComp) {
+        // wrap in a div that also handles toggle on long press or double click
+        pill = `<span onclick="toggleCelda('${c.cod}',${d})" title="COMP: compartida — toca para cambiar" style="display:inline-block;padding:3px 4px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;min-width:28px;text-align:center;background:rgba(255,190,11,0.18);color:#ffbe0b">CO</span>`;
+      }
+      html += `<td style="padding:4px 2px;text-align:center;border-bottom:1px solid rgba(30,45,69,0.4);border-right:1px solid rgba(30,45,69,0.3)">${pill}</td>`;
+    });
+    html += `<td style="text-align:center;font-family:monospace;font-weight:700;font-size:12px;color:#00d68f;padding:6px 4px;background:rgba(0,214,143,0.04)">${cortas}${comp?'<span style="color:#ffbe0b;font-size:9px">+'+comp+'</span>':''}</td>`;
+    html += `<td style="text-align:center;font-family:monospace;font-weight:700;font-size:12px;color:#ff4d6d;padding:6px 4px;background:rgba(255,77,109,0.04)">${largas}</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('plan-tabla').innerHTML = html;
+
+  document.getElementById('plan-resumen').innerHTML = activos.map(c => {
+    const cor = cortasTotales[c.cod]||0;
+    const lar = dias.length - cor;
+    const pct = Math.round(cor/(cor+lar||1)*100);
+    return `<div class="res-item">
+      <div class="res-top">
+        <span class="res-cod">${c.cod}</span>
+        <span style="font-family:monospace;font-size:12px"><span style="color:#00d68f">C:${cor}</span> / <span style="color:#ff4d6d">L:${lar}</span></span>
+      </div>
+      <div class="res-bar-bg"><div class="res-bar" style="width:${pct}%"></div></div>
+      <div class="res-nums"><span style="color:var(--txt2)">${pct}% cortas</span></div>
+    </div>`;
+  }).join('');
+}
+
+function editCortasDia(dia) {
+  const actual = cortasDia[dia] ?? DEFAULT_CORTAS;
+  const max = Math.min(conductores.filter(c=>c.estado==='activo').length, 10);
+  document.getElementById('mcd-dia-label').textContent = `${String(dia).padStart(2,'0')}/06`;
+  const btns = document.getElementById('mcd-btns');
+  btns.innerHTML = '';
+  for(let i = 1; i <= max; i++) {
+    const sel = i === actual;
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    btn.style.cssText = `width:52px;height:52px;border-radius:12px;font-size:22px;font-weight:800;font-family:monospace;cursor:pointer;border:2px solid ${sel?'var(--grn)':'var(--brd)'};background:${sel?'rgba(0,214,143,0.15)':'var(--s2)'};color:${sel?'var(--grn)':'var(--txt)'};transition:all 0.1s`;
+    btn.onclick = () => { setCortasDia(dia, i); closeModal('m-cortas-dia'); toast(`✅ Día ${String(dia).padStart(2,'0')}: ${i} cortas`); };
+    btns.appendChild(btn);
+  }
+  openModal('m-cortas-dia');
+}
+
+function buildPlan() {
+  // Solo calcula si no hay datos en absoluto — nunca recalcula automáticamente
+  if(!planGenerado || Object.keys(planData).length === 0) algoritmo();
+  renderPlan();
+}
+
+// ═══════════════════════════════════════
+// CONDUCTORES
+// ═══════════════════════════════════════
+function buildCond() {
+  const activos = conductores.filter(c=>c.estado==='activo');
+  const vacs = conductores.filter(c=>c.estado==='vac');
+  const bajas = conductores.filter(c=>c.estado==='baja');
+
+  document.getElementById('cond-activos').innerHTML = activos.map(c=>`
+    <div class="cond-card">
+      <div class="cond-top">
+        <span class="cond-cod">${c.cod}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${c.cod==='JS228'?'<span style="font-size:11px;color:var(--grn)">⭐ siempre corta</span>':''}
+          <span class="badge bg">ACTIVO</span>
+        </div>
+      </div>
+      <div class="cond-actions">
+        <button class="btn btn-y btn-sm" onclick="openVac('${c.cod}')">🏖️ Vacaciones</button>
+        <button class="btn btn-r btn-sm" onclick="openBaja('${c.cod}')">🏥 Baja</button>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('cond-otros').innerHTML = `
+    ${vacs.length?`<div class="card"><div class="card-head">🏖️ De vacaciones</div>
+      ${vacs.map(c=>`<div class="list-item">
+        <div><div class="list-cod">${c.cod}</div><div class="list-sub">${c.vac?.fin==='?'?'Sin fecha de vuelta':c.vac?.ini+' → '+c.vac?.fin}</div></div>
+        <button class="btn btn-p btn-sm" onclick="alta('${c.cod}')">✅ Alta</button>
+      </div>`).join('')}
+    </div>`:''}
+    ${bajas.length?`<div class="card"><div class="card-head">🏥 Bajas médicas</div>
+      ${bajas.map(c=>`<div class="list-item">
+        <div><div class="list-cod">${c.cod}</div><div class="list-sub">Desde ${c.bajaDesde||'—'}</div></div>
+        <button class="btn btn-p btn-sm" onclick="alta('${c.cod}')">✅ Alta</button>
+      </div>`).join('')}
+    </div>`:''}
+  `;
+}
+
+function addConductor() {
+  const cod = document.getElementById('nc-cod').value.trim().toUpperCase();
+  const mat = document.getElementById('nc-mat').value.trim().toUpperCase() || '—';
+  const estado = document.getElementById('nc-estado').value;
+  if(!cod){toast('⚠️ Introduce un código',true);return;}
+  if(conductores.find(c=>c.cod===cod)){toast('⚠️ Ya existe ese código',true);return;}
+  conductores.push({cod,mat,estado,vac:null,bajaDesde:null});
+  historial.unshift({fecha:hoyFmt(),cod,tipo:'alta',det:'Nuevo conductor añadido'});
+  closeModal('m-new-cond');
+  saveLS(); buildCond(); buildDash();
+  toast('✅ '+cod+' añadido');
+}
+
+function openVac(cod){
+  document.getElementById('vac-cod').value=cod;
+  document.getElementById('m-vac-title').innerHTML=`Vacaciones — <em>${cod}</em>`;
+  document.getElementById('vac-ini').value=todayISO();
+  document.getElementById('vac-fin').value='';
+  openModal('m-vac');
+}
+function guardarVac(){
+  const cod=document.getElementById('vac-cod').value;
+  const ini=document.getElementById('vac-ini').value;
+  const fin=document.getElementById('vac-fin').value;
+  const c=conductores.find(x=>x.cod===cod);
+  if(!c)return;
+  c.estado='vac';
+  c.vac={ini:fmtDate(ini),fin:fin?fmtDate(fin):'?'};
+  historial.unshift({fecha:hoyFmt(),cod,tipo:'vac',det:`Vacaciones ${fmtDate(ini)} → ${fin?fmtDate(fin):'sin fecha vuelta'}`});
+  closeModal('m-vac');
+  saveLS(); buildCond(); buildDash();
+  toast('✅ Vacaciones de '+cod+' registradas');
+}
+
+function openBaja(cod){
+  document.getElementById('baja-cod').value=cod;
+  document.getElementById('m-baja-title').innerHTML=`Baja médica — <em>${cod}</em>`;
+  document.getElementById('baja-ini').value=todayISO();
+  openModal('m-baja');
+}
+function guardarBaja(){
+  const cod=document.getElementById('baja-cod').value;
+  const ini=document.getElementById('baja-ini').value;
+  const c=conductores.find(x=>x.cod===cod);
+  if(!c)return;
+  c.estado='baja';
+  c.bajaDesde=fmtDate(ini);
+  historial.unshift({fecha:hoyFmt(),cod,tipo:'baja',det:`Baja médica desde ${fmtDate(ini)}`});
+  closeModal('m-baja');
+  saveLS(); buildCond(); buildDash();
+  toast('✅ Baja de '+cod+' registrada');
+}
+
+function alta(cod){
+  const c=conductores.find(x=>x.cod===cod);
+  if(!c)return;
+  historial.unshift({fecha:hoyFmt(),cod,tipo:'alta',det:`Alta — venía de ${c.estado==='baja'?'baja médica':'vacaciones'}`});
+  c.estado='activo'; c.vac=null; c.bajaDesde=null;
+  saveLS(); buildCond(); buildDash();
+  toast('✅ '+cod+' dado de alta');
+}
+
+// ═══════════════════════════════════════
+// RUTA DEL DIA
+// ═══════════════════════════════════════
+function buildRuta(){
+  const activos=conductores.filter(c=>c.estado==='activo');
+  document.getElementById('rd-count').textContent=activos.length;
+
+  const ausentes=conductores.filter(c=>c.estado!=='activo');
+  let alertsHtml = ausentes.map(c=>`
+    <div class="alert y">${c.estado==='vac'?'🏖️':'🏥'} <strong>${c.cod}</strong> — ${c.estado==='vac'?'vacaciones':'baja médica'}</div>`).join('');
+
+  if(tallerList.length > 0) {
+    alertsHtml += tallerList.map(t=>`
+      <div class="alert p">🔧 <strong>${t.mat}</strong> — En taller${t.motivo?' ('+t.motivo+')':''}</div>`).join('');
+  }
+  document.getElementById('rd-alerts').innerHTML = alertsHtml;
+
+  document.getElementById('rd-tbody').innerHTML=activos.map(c=>{
+    const st=rdState[c.cod];
+    const tipo=tipos[c.cod]||'LARGA';
+    const tp=tipo==='CORTA'?'c':'l';
+    const enTaller = tallerList.map(t=>t.mat);
+    const matsDisp = camiones.filter(m => !enTaller.includes(m));
+    const matSelOk = matsDisp.includes(st.matricula);
+    const matsOrdenadas = matSelOk ? [st.matricula, ...matsDisp.filter(m=>m!==st.matricula)] : matsDisp;
+    const matOpts = (matSelOk ? '' : '<option value="">— sin asignar —</option>') +
+      matsOrdenadas.map(m=>`<option${m===st.matricula?' selected':''}>${m}</option>`).join('');
+    const rutaOpts=rutas.map(r=>`<option${r===st.ruta?' selected':''}>${r}</option>`).join('');
+    const ayOpts=['NO','SÍ'].map(a=>`<option${st.ayudante===a?' selected':''}>${a}</option>`).join('');
+    const jsOpts=activos.filter(x=>x.cod!==c.cod).map(x=>`<option${st.ayudanteJS===x.cod?' selected':''}>${x.cod}</option>`).join('');
+    const nota = notasRuta[c.cod] || '';
+
+    return `<tr>
+      <td><span class="ruta-cod">${c.cod}</span></td>
+      <td><span class="tipo-pill ${tp}">${tipo}</span></td>
+      <td><select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)">${rutaOpts}</select></td>
+      <td><select class="rd-select" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)">${matOpts}</select></td>
+      <td>
+        <select class="rd-select" data-cod="${c.cod}" data-f="ayudante" onchange="upRD(this)" style="margin-bottom:4px">${ayOpts}</select>
+        <div id="ay-${c.cod}" style="display:${st.ayudante==='SÍ'?'block':'none'}">
+          <select class="rd-select" data-cod="${c.cod}" data-f="ayudanteJS" onchange="upRD(this)"><option value="">— elige —</option>${jsOpts}</select>
+        </div>
+      </td>
+      <td>
+        <span class="nota-badge" onclick="openNota('${c.cod}')" title="Añadir nota">${nota || '+ nota'}</span>
+      </td>
+    </tr>`;
+  }).join('');
+
+  buildTallerLista();
+}
+
+function upRD(el){
+  const cod=el.dataset.cod, f=el.dataset.f;
+  rdState[cod][f]=el.value;
+  if(f==='ayudante'){const d=document.getElementById('ay-'+cod);if(d)d.style.display=el.value==='SÍ'?'block':'none';}
+  saveLS();
+}
+
+// ═══════════════════════════════════════
+// COPIAR TEXTO
+// ═══════════════════════════════════════
+function copiarTexto(){
+  const activos=conductores.filter(c=>c.estado==='activo');
+  const fecha=document.getElementById('rd-fecha').value||mananaISO();
+  const ciudad=document.getElementById('rd-ciudad').value;
+  const [y,m,d]=fecha.split('-');
+  let txt=`📋 RUTAS ${d}/${m}/${y} — ${ciudad}\n${'─'.repeat(32)}\n`;
+  activos.forEach(c=>{
+    const st=rdState[c.cod];
+    const tipo=tipos[c.cod]||'LARGA';
+    const ay=st.ayudante==='SÍ'&&st.ayudanteJS?`+${st.ayudanteJS}`:'';
+    const nota=notasRuta[c.cod]?` [${notasRuta[c.cod]}]`:'';
+    txt+=`${(c.cod+ay).padEnd(12)} ${st.ruta.padEnd(22)} ${tipo[0]}  ${st.matricula}${nota}\n`;
+  });
+  if(tallerList.length > 0) {
+    txt += `\n${'─'.repeat(32)}\nTALLER: ${tallerList.map(t=>t.mat+(t.motivo?' ('+t.motivo+')':'')).join(', ')}\n`;
+  }
+  const ausentes=conductores.filter(c=>c.estado!=='activo');
+  if(ausentes.length > 0){
+    txt+=`\nVACAC./BAJA: ${ausentes.map(c=>c.cod.replace('JS','')).join(', ')}\n`;
+  }
+  navigator.clipboard.writeText(txt).then(()=>toast('📋 Copiado'));
+}
+
+// ═══════════════════════════════════════
+// GENERAR IMAGEN (estilo foto)
+// ═══════════════════════════════════════
+function generarImagen(){
+  const activos = conductores.filter(c=>c.estado==='activo');
+  const fecha = document.getElementById('rd-fecha').value || mananaISO();
+  const ciudad = document.getElementById('rd-ciudad').value;
+  const [y,m,d] = fecha.split('-');
+  const fechaFmt = `${d}/${m}/${y}`;
+  const ausentes = conductores.filter(c=>c.estado!=='activo');
+  const conNotas = activos.filter(c=>notasRuta[c.cod]);
+  const hasTaller = tallerList.length > 0;
+
+  const W = 620;
+  const lineH = 46;
+  const headerH = 90;
+  const footerH = 50;
+  const sepH = 28;
+
+  // Secciones extra al final
+  let extraLines = 0;
+  if(ausentes.length > 0) extraLines += ausentes.length;
+  if(hasTaller) extraLines += tallerList.length;
+  const hasExtra = ausentes.length > 0 || hasTaller;
+
+  const H = headerH
+    + activos.length * lineH
+    + (hasExtra ? sepH + extraLines * lineH : 0)
+    + footerH;
+
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+
+  // Fondo blanco
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Header gris
+  ctx.fillStyle = '#f5f5f5';
+  ctx.fillRect(0, 0, W, headerH);
+  ctx.fillStyle = '#cccccc';
+  ctx.fillRect(0, headerH - 1, W, 1);
+
+  // Fecha
+  ctx.fillStyle = '#111111';
+  ctx.font = 'bold 30px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(fechaFmt, 24, 50);
+
+  // Ciudad
+  ctx.fillStyle = '#444444';
+  ctx.font = 'bold 18px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(ciudad, W - 24, 50);
+
+  // Cabeceras
+  ctx.fillStyle = '#888888';
+  ctx.font = 'bold 10px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('COD', 24, headerH - 10);
+  ctx.fillText('RUTA / DESTINO', 100, headerH - 10);
+  ctx.fillText('MATRÍCULA', 420, headerH - 10);
+
+  // Filas conductores
+  activos.forEach((cond, i) => {
+    const st = rdState[cond.cod];
+    const y0 = headerH + i * lineH;
+    ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#fafafa';
+    ctx.fillRect(0, y0, W, lineH);
+    ctx.fillStyle = '#eeeeee';
+    ctx.fillRect(0, y0 + lineH - 1, W, 1);
+
+    const cy = y0 + lineH / 2 + 6;
+    const codNum = cond.cod.replace('JS','');
+    const ayPart = st.ayudante === 'SÍ' && st.ayudanteJS ? '+' + st.ayudanteJS.replace('JS','') : '';
+    const codTxt = codNum + ayPart;
+    const nota = notasRuta[cond.cod];
+
+    // COD
+    ctx.fillStyle = '#111111';
+    ctx.font = 'bold 17px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(codTxt, 24, cy);
+
+    // RUTA
+    ctx.fillStyle = '#222222';
+    ctx.font = '15px monospace';
+    const rutaStr = st.ruta.length > 17 ? st.ruta.substring(0, 16) + '…' : st.ruta;
+    ctx.fillText(rutaStr, 100, cy);
+
+    // MATRÍCULA
+    ctx.fillStyle = '#555555';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(st.matricula, 420, cy);
+
+    // NOTA si existe — pequeña, gris azulado
+    if(nota) {
+      ctx.fillStyle = '#6b8cba';
+      ctx.font = 'italic 11px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(nota.length > 18 ? nota.substring(0,17)+'…' : nota, W - 14, cy);
+      ctx.textAlign = 'left';
+    }
+  });
+
+  // Sección extra (vacaciones / baja / taller)
+  if(hasExtra) {
+    const sepY = headerH + activos.length * lineH;
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(0, sepY, W, sepH);
+    ctx.fillStyle = '#999999';
+    ctx.fillRect(0, sepY, W, 1);
+
+    // Labels en la barra separadora
+    let sepLabels = [];
+    if(ausentes.length > 0) sepLabels.push('VACACIONES / BAJA MÉDICA');
+    if(hasTaller) sepLabels.push('TALLER');
+    ctx.fillStyle = '#888888';
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(sepLabels.join('  ·  '), 24, sepY + 18);
+
+    // Listar ausentes primero
+    let extraIdx = 0;
+    ausentes.forEach((cond) => {
+      const y0 = sepY + sepH + extraIdx * lineH;
+      ctx.fillStyle = extraIdx % 2 === 0 ? '#f9f9f9' : '#f4f4f4';
+      ctx.fillRect(0, y0, W, lineH);
+      ctx.fillStyle = '#dddddd';
+      ctx.fillRect(0, y0 + lineH - 1, W, 1);
+      const cy = y0 + lineH / 2 + 6;
+      ctx.fillStyle = '#aaaaaa';
+      ctx.font = 'bold 15px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(cond.cod.replace('JS',''), 24, cy);
+      ctx.fillStyle = '#bbbbbb';
+      ctx.font = '13px monospace';
+      ctx.fillText(cond.estado === 'vac' ? 'VACACIONES' : 'BAJA MÉDICA', 100, cy);
+      extraIdx++;
+    });
+
+    // Luego taller
+    tallerList.forEach((t) => {
+      const y0 = sepY + sepH + extraIdx * lineH;
+      ctx.fillStyle = extraIdx % 2 === 0 ? '#f9f9f9' : '#f4f4f4';
+      ctx.fillRect(0, y0, W, lineH);
+      ctx.fillStyle = '#dddddd';
+      ctx.fillRect(0, y0 + lineH - 1, W, 1);
+      const cy = y0 + lineH / 2 + 6;
+      // Icono taller
+      ctx.fillStyle = '#9966cc';
+      ctx.font = 'bold 15px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(t.mat, 24, cy);
+      ctx.fillStyle = '#aa88cc';
+      ctx.font = '13px monospace';
+      ctx.fillText('TALLER' + (t.motivo ? '  ' + t.motivo.substring(0,20) : ''), 100, cy);
+      extraIdx++;
+    });
+  }
+
+  // Pie
+  const fy = H - footerH;
+  ctx.fillStyle = '#f5f5f5';
+  ctx.fillRect(0, fy, W, footerH);
+  ctx.fillStyle = '#cccccc';
+  ctx.fillRect(0, fy, W, 1);
+  ctx.fillStyle = '#aaaaaa';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`GestorRutas Pro · ${fechaFmt} · ${activos.length} conductores`, W / 2, fy + 28);
+
+  const dataURL = cv.toDataURL('image/png');
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if(isIOS){ showImgModal(dataURL, fechaFmt); }
+  else {
+    const lnk = document.createElement('a');
+    lnk.download = `rutas_${fechaFmt.replace(/\//g,'-')}.png`;
+    lnk.href = dataURL;
+    document.body.appendChild(lnk); lnk.click(); document.body.removeChild(lnk);
+    toast('📸 Imagen descargada');
+  }
+}
+
+function showImgModal(dataURL, fechaFmt){
+  let ov=document.getElementById('m-img');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='m-img';
+    ov.className='modal-ov';
+    ov.innerHTML=`
+      <div class="modal" style="padding:20px">
+        <div class="modal-title" style="font-size:15px;margin-bottom:10px">📸 <em>Guardar imagen</em></div>
+        <p style="font-size:12px;color:var(--txt2);margin-bottom:14px;line-height:1.5">
+          En iPhone: mantén pulsada la imagen → <strong style="color:var(--txt)">Añadir a Fotos</strong>
+        </p>
+        <img id="img-preview" style="width:100%;border-radius:10px;border:1px solid var(--brd);margin-bottom:14px;display:block" />
+        <button class="btn btn-p btn-full" onclick="closeModal('m-img')">✓ Listo</button>
+      </div>`;
+    document.body.appendChild(ov);
+  }
+  document.getElementById('img-preview').src=dataURL;
+  openModal('m-img');
+}
+
+// ═══════════════════════════════════════
+// GESTIÓN
+// ═══════════════════════════════════════
+function buildGestion(){
+  document.getElementById('cam-lista').innerHTML=camiones.map(m=>`
+    <div class="list-item">
+      <span class="list-cod">${m}</span>
+      <button class="btn btn-r btn-sm" onclick="delCam('${m}')">✕</button>
+    </div>`).join('');
+  document.getElementById('rutas-lista').innerHTML=rutas.map(r=>`
+    <div class="list-item">
+      <span style="font-size:13px;font-weight:600">${r}</span>
+      <button class="btn btn-r btn-sm" onclick="delRuta('${r}')">✕</button>
+    </div>`).join('');
+}
+
+function addCamion(){
+  const mat=document.getElementById('cam-mat').value.trim().toUpperCase();
+  if(!mat){toast('⚠️ Introduce matrícula',true);return;}
+  if(camiones.includes(mat)){toast('⚠️ Ya existe',true);return;}
+  camiones.push(mat);
+  closeModal('m-new-cam');
+  document.getElementById('cam-mat').value='';
+  saveLS();buildGestion();buildCam();toast('✅ '+mat+' añadido');
+}
+function delCam(m){
+  camiones=camiones.filter(x=>x!==m);
+  tallerList=tallerList.filter(t=>t.mat!==m);
+  Object.keys(rdState).forEach(cod=>{if(rdState[cod].matricula===m)rdState[cod].matricula='';});
+  saveLS();buildGestion();buildCam();buildDash();toast('🗑️ '+m+' eliminado');
+}
+
+// ═══════════════════════════════════════
+// PANTALLA CAMIONES
+// ═══════════════════════════════════════
+function buildCam(){
+  const enTaller=tallerList.map(t=>t.mat);
+  const disponibles=camiones.filter(m=>!enTaller.includes(m));
+  document.getElementById('cam-disp-lista').innerHTML=disponibles.length===0
+    ?'<div class="list-item" style="color:var(--txt2);font-size:12px;padding:14px 16px">Sin camiones disponibles</div>'
+    :disponibles.map(m=>`
+      <div class="list-item">
+        <span class="list-cod">${m}</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-pu btn-sm" onclick="addTallerDirecto('${m}')">🔧 Taller</button>
+          <button class="btn btn-r btn-sm" onclick="delCam('${m}')">✕</button>
+        </div>
+      </div>`).join('');
+  document.getElementById('cam-taller-lista').innerHTML=tallerList.length===0
+    ?'<div class="list-item" style="color:var(--txt2);font-size:12px;padding:14px 16px">Ninguno en taller</div>'
+    :tallerList.map(t=>`
+      <div class="list-item">
+        <div>
+          <div class="list-cod" style="color:var(--pur)">${t.mat}</div>
+          <div class="list-sub">${t.motivo||'Sin motivo'} · Desde ${t.desde}</div>
+        </div>
+        <button class="btn btn-p btn-sm" onclick="sacarTaller('${t.mat}')">✅ Listo</button>
+      </div>`).join('');
+}
+
+function addTallerDirecto(mat){
+  openModal('m-add-taller');
+  setTimeout(()=>{
+    const sel=document.getElementById('taller-mat');
+    if(sel){for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===mat){sel.selectedIndex=i;break;}}}
+  },50);
+}
+
+function sacarTaller(mat){
+  tallerList=tallerList.filter(t=>t.mat!==mat);
+  historial.unshift({fecha:hoyFmt(),cod:mat,tipo:'taller',det:'Camión '+mat+' sale de taller'});
+  saveLS();buildCam();buildDash();buildTallerLista();toast('✅ '+mat+' disponible');
+}
+function addRuta(){
+  const n=document.getElementById('ruta-nombre').value.trim().toUpperCase();
+  if(!n){toast('⚠️ Introduce nombre',true);return;}
+  if(rutas.includes(n)){toast('⚠️ Ya existe',true);return;}
+  rutas.push(n);closeModal('m-new-ruta');saveLS();buildGestion();toast('✅ '+n+' añadida');
+}
+function delRuta(r){rutas=rutas.filter(x=>x!==r);saveLS();buildGestion();toast('🗑️ Ruta eliminada');}
+
+// ═══════════════════════════════════════
+// HISTORIAL
+// ═══════════════════════════════════════
+let histFiltroActivo = 'all';
+
+function filtrarHist(f) {
+  histFiltroActivo = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('on', b.dataset.f === f));
+  renderHistLista();
+}
+
+function renderHistLista() {
+  const tags={manual:'ht-m',vac:'ht-v',baja:'ht-b',alta:'ht-a',taller:'ht-t',nota:'ht-n'};
+  const labels={manual:'CAMBIO',vac:'VACACIONES',baja:'BAJA MÉDICA',alta:'ALTA',taller:'TALLER',nota:'NOTA'};
+  const filtrado = histFiltroActivo === 'all' ? historial : historial.filter(h=>h.tipo===histFiltroActivo);
+  document.getElementById('hist-lista').innerHTML = filtrado.length === 0
+    ? '<div class="hist-item" style="color:var(--txt2);font-size:12px">Sin registros</div>'
+    : filtrado.map(h=>`
+    <div class="hist-item">
+      <div class="hist-top">
+        <span class="hist-fecha">${h.fecha}</span>
+        <span class="hist-tag ${tags[h.tipo]||'ht-m'}">${labels[h.tipo]||h.tipo}</span>
+        <span class="list-cod" style="font-size:12px">${h.cod}</span>
+      </div>
+      <div class="hist-detail">${h.det}</div>
+    </div>`).join('');
+}
+
+function buildHist(){
+  renderHistLista();
+
+  const activos=conductores.filter(c=>c.estado==='activo');
+  const dias = diasLaborables().length;
+  document.getElementById('res-lista').innerHTML=activos.map((c,i)=>{
+    const cor = planGenerado
+      ? Object.values(planData[c.cod]||{}).filter(v=>v==='CORTA'||v==='COMP').length
+      : (c.cod==='JS228'?dias:Math.floor(10+i%3));
+    const lar = dias - cor;
+    const pct = Math.round(cor/(cor+lar||1)*100);
+    return `<div class="res-item">
+      <div class="res-top">
+        <span class="res-cod">${c.cod}</span>
+        <span style="font-family:monospace;font-size:12px"><span style="color:var(--grn)">C:${cor}</span> / <span style="color:var(--red)">L:${lar}</span></span>
+      </div>
+      <div class="res-bar-bg"><div class="res-bar" style="width:${pct}%"></div></div>
+      <div class="res-nums"><span style="color:var(--txt2)">${pct}% cortas</span></div>
+    </div>`;
+  }).join('');
+}
+
+function borrarHistConfirmado() {
+  historial = [];
+  closeModal('m-confirmar-hist');
+  saveLS(); renderHistLista();
+  toast('🗑️ Historial borrado');
+}
+
+function showCompInfo(cod, dia) {
+  document.getElementById('comp-info-cod').textContent = cod;
+  document.getElementById('comp-info-dia').textContent = String(dia).padStart(2,'0') + '/06';
+  openModal('m-comp-info');
+}
+
+// ═══════════════════════════════════════
+// MODALS & TOAST
+// ═══════════════════════════════════════
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  // Si es el modal de taller, poblar el select
+  if(id === 'm-add-taller') {
+    const sel = document.getElementById('taller-mat');
+    sel.innerHTML = '<option value="">— selecciona —</option>' +
+      camiones.map(m=>`<option value="${m}">${m}</option>`).join('');
+    document.getElementById('taller-motivo').value = '';
+  }
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+let toastT;
+function toast(msg,err=false){
+  const el=document.getElementById('toast-el');
+  el.textContent=msg;el.className='toast show'+(err?' err':'');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ═══════════════════════════════════════
+// DATE UTILS
+// ═══════════════════════════════════════
+function todayISO(){return new Date().toISOString().split('T')[0];}
+function fmtDate(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
+function hoyFmt(){const n=new Date();return`${String(n.getDate()).padStart(2,'0')}/${String(n.getMonth()+1).padStart(2,'0')} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;}
+
+// ═══════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  document.getElementById('clock-date').textContent=`${dias[n.getDay()]} ${n.getDate()} ${meses[n.getMonth()]} ${n.getFullYear()}`;
+}
+setInterval(tick,1000);tick();
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+loadLS();
+// Fecha siempre mañana al abrir
+document.getElementById('rd-fecha').value = mananaISO();
+buildDash();
+</script>
+</body>
+</html>
