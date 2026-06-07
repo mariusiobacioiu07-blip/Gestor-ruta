@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.gestorrutas.twa",
+        "sha256_cert_fingerprints": ["90:7A:2D:26:E7:BD:DF:C4:E1:B5:BB:98:B3:65:4E:4A:F7:C1:65:08:E7:A2:8A:F1:7B:4C:2A:33:75:AB:C0:EF"]
+      }
+    }]
