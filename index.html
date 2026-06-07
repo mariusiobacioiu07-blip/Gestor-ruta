@@ -576,7 +576,7 @@ let notasRuta = {};
 
 const rdState = {};
 conductores.forEach((c,i) => {
-  rdState[c.cod] = {ruta:rutas[i%rutas.length], matricula:c.mat!=='—'?c.mat:camiones[0], ayudante:'NO', ayudanteJS:''};
+  rdState[c.cod] = {ruta:rutas[i%rutas.length], ruta2:'', matricula:c.mat!=='—'?c.mat:camiones[0], ayudante:'NO', ayudanteJS:''};
 });
 
 const tipos = {};
@@ -1127,6 +1127,8 @@ function buildRuta(){
         return `<option value="${m}"${m===st.matricula?' selected':''}>${label}</option>`;
       }).join('');
     const rutaOpts=rutas.map(r=>`<option${r===st.ruta?' selected':''}>${r}</option>`).join('');
+    const ruta2Opts='<option value="">— ninguna —</option>'+rutas.map(r=>`<option${r===st.ruta2?' selected':''}>${r}</option>`).join('');
+    const tieneRuta2 = !!st.ruta2;
     const ayOpts=['NO','SÍ'].map(a=>`<option${st.ayudante===a?' selected':''}>${a}</option>`).join('');
     const jsOpts=activos.filter(x=>x.cod!==c.cod).map(x=>`<option${st.ayudanteJS===x.cod?' selected':''}>${x.cod}</option>`).join('');
     const nota = notasRuta[c.cod] || '';
@@ -1140,7 +1142,15 @@ function buildRuta(){
     return `<tr${filaStyle?' style="'+filaStyle+'"':''}>
       <td><span class="ruta-cod">${c.cod}</span>${miMatOcupada?'<span title="Matrícula en uso por otro conductor" style="margin-left:4px;font-size:13px">⚠️</span>':sinMat?'<span title="Sin matrícula asignada" style="margin-left:4px;font-size:13px">⚠️</span>':''}</td>
       <td><span class="tipo-pill ${tp}">${tipo}</span></td>
-      <td><select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)">${rutaOpts}</select></td>
+      <td>
+        <select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)">${rutaOpts}</select>
+        <div style="display:flex;align-items:center;gap:4px;margin-top:4px">
+          <span style="font-size:10px;color:var(--txt2);font-weight:700">+</span>
+          <select class="rd-select" data-cod="${c.cod}" data-f="ruta2" onchange="upRD(this)" style="font-size:11px;${tieneRuta2?'color:var(--grn);font-weight:700':'color:var(--txt2)'}">
+            ${ruta2Opts}
+          </select>
+        </div>
+      </td>
       <td><select class="rd-select" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matStyle}">${matOpts}</select>${alqBadge}</td>
       <td>
         <select class="rd-select" data-cod="${c.cod}" data-f="ayudante" onchange="upRD(this)" style="margin-bottom:4px">${ayOpts}</select>
@@ -1187,7 +1197,8 @@ function copiarTexto(){
     const tipo = (tipoPlanCP === 'CORTA' || tipoPlanCP === 'LARGA') ? tipoPlanCP : (tipos[c.cod]||'LARGA');
     const ay=st.ayudante==='SÍ'&&st.ayudanteJS?`+${st.ayudanteJS}`:'';
     const nota=notasRuta[c.cod]?` [${notasRuta[c.cod]}]`:'';
-    txt+=`${(c.cod+ay).padEnd(12)} ${st.ruta.padEnd(22)} ${tipo[0]}  ${st.matricula}${nota}\n`;
+    const rutaTxt = st.ruta2 ? `${st.ruta} + ${st.ruta2}` : st.ruta;
+    txt+=`${(c.cod+ay).padEnd(12)} ${rutaTxt.padEnd(22)} ${tipo[0]}  ${st.matricula}${nota}\n`;
   });
   if(tallerList.length > 0) {
     txt += `\n${'─'.repeat(32)}\nTALLER: ${tallerList.map(t=>t.mat+(t.motivo?' ('+t.motivo+')':'')).join(', ')}\n`;
@@ -1284,10 +1295,18 @@ function generarImagen(){
     ctx.textAlign = 'left';
     ctx.fillText(codTxt, 24, cy);
 
-    // RUTA
+    // RUTA (simple o doble)
     ctx.fillStyle = '#222222';
     ctx.font = '15px monospace';
-    const rutaStr = st.ruta.length > 17 ? st.ruta.substring(0, 16) + '…' : st.ruta;
+    let rutaStr;
+    if(st.ruta2) {
+      // Abreviar ambas rutas para que quepan: máx 10 chars cada una
+      const r1 = st.ruta.length > 10 ? st.ruta.substring(0,9)+'.' : st.ruta;
+      const r2 = st.ruta2.length > 10 ? st.ruta2.substring(0,9)+'.' : st.ruta2;
+      rutaStr = r1 + ' + ' + r2;
+    } else {
+      rutaStr = st.ruta.length > 17 ? st.ruta.substring(0, 16) + '…' : st.ruta;
+    }
     ctx.fillText(rutaStr, 100, cy);
 
     // MATRÍCULA
