@@ -965,6 +965,7 @@ function buildCond() {
       <div class="cond-actions">
         <button class="btn btn-y btn-sm" onclick="openVac('${c.cod}')">🏖️ Vacaciones</button>
         <button class="btn btn-r btn-sm" onclick="openBaja('${c.cod}')">🏥 Baja</button>
+        ${c.cod!=='JS228'?`<button class="btn btn-sm" style="background:#3a1a2e;color:#ff6b9d;border:1px solid #5a2a4e" onclick="confirmarDespido('${c.cod}')">🚪 Despedir</button>`:''}
       </div>
     </div>`).join('');
 
@@ -972,13 +973,19 @@ function buildCond() {
     ${vacs.length?`<div class="card"><div class="card-head">🏖️ De vacaciones</div>
       ${vacs.map(c=>`<div class="list-item">
         <div><div class="list-cod">${c.cod}</div><div class="list-sub">${c.vac?.fin==='?'?'Sin fecha de vuelta':c.vac?.ini+' → '+c.vac?.fin}</div></div>
-        <button class="btn btn-p btn-sm" onclick="alta('${c.cod}')">✅ Alta</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-p btn-sm" onclick="alta('${c.cod}')">✅ Alta</button>
+          <button class="btn btn-sm" style="background:#3a1a2e;color:#ff6b9d;border:1px solid #5a2a4e" onclick="confirmarDespido('${c.cod}')">🚪</button>
+        </div>
       </div>`).join('')}
     </div>`:''}
     ${bajas.length?`<div class="card"><div class="card-head">🏥 Bajas médicas</div>
       ${bajas.map(c=>`<div class="list-item">
         <div><div class="list-cod">${c.cod}</div><div class="list-sub">Desde ${c.bajaDesde||'—'}</div></div>
-        <button class="btn btn-p btn-sm" onclick="alta('${c.cod}')">✅ Alta</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-p btn-sm" onclick="alta('${c.cod}')">✅ Alta</button>
+          <button class="btn btn-sm" style="background:#3a1a2e;color:#ff6b9d;border:1px solid #5a2a4e" onclick="confirmarDespido('${c.cod}')">🚪</button>
+        </div>
       </div>`).join('')}
     </div>`:''}
   `;
@@ -1046,6 +1053,23 @@ function alta(cod){
   toast('✅ '+cod+' dado de alta');
 }
 
+function confirmarDespido(cod){
+  if(confirm(`¿Seguro que quieres eliminar a ${cod}? Esta acción no se puede deshacer.`)){
+    despedirConductor(cod);
+  }
+}
+
+function despedirConductor(cod){
+  conductores = conductores.filter(c=>c.cod!==cod);
+  delete tipos[cod];
+  delete rdState[cod];
+  delete notasRuta[cod];
+  if(planData[cod]) delete planData[cod];
+  historial.unshift({fecha:hoyFmt(),cod,tipo:'baja',det:'Conductor eliminado (baja definitiva)'});
+  saveLS(); buildCond(); buildDash(); buildRuta();
+  toast('🚪 '+cod+' eliminado');
+}
+
 // ═══════════════════════════════════════
 // RUTA DEL DIA
 // ═══════════════════════════════════════
@@ -1063,9 +1087,15 @@ function buildRuta(){
   }
   document.getElementById('rd-alerts').innerHTML = alertsHtml;
 
+  // Obtener el día del mes seleccionado para consultar planData
+  const fechaRD = document.getElementById('rd-fecha').value || mananaISO();
+  const diaRD = parseInt(fechaRD.split('-')[2], 10);
+
   document.getElementById('rd-tbody').innerHTML=activos.map(c=>{
     const st=rdState[c.cod];
-    const tipo=tipos[c.cod]||'LARGA';
+    // Si hay planificación mensual para ese día, usarla; si no, usar tipos manual
+    const tipoPlan = planData[c.cod] && planData[c.cod][diaRD];
+    const tipo = (tipoPlan === 'CORTA' || tipoPlan === 'LARGA') ? tipoPlan : (tipos[c.cod]||'LARGA');
     const tp=tipo==='CORTA'?'c':'l';
     const enTaller = tallerList.map(t=>t.mat);
     const matsDisp = camiones.filter(m => !enTaller.includes(m));
@@ -1113,10 +1143,12 @@ function copiarTexto(){
   const fecha=document.getElementById('rd-fecha').value||mananaISO();
   const ciudad=document.getElementById('rd-ciudad').value;
   const [y,m,d]=fecha.split('-');
+  const diaCP = parseInt(d, 10);
   let txt=`📋 RUTAS ${d}/${m}/${y} — ${ciudad}\n${'─'.repeat(32)}\n`;
   activos.forEach(c=>{
     const st=rdState[c.cod];
-    const tipo=tipos[c.cod]||'LARGA';
+    const tipoPlanCP = planData[c.cod] && planData[c.cod][diaCP];
+    const tipo = (tipoPlanCP === 'CORTA' || tipoPlanCP === 'LARGA') ? tipoPlanCP : (tipos[c.cod]||'LARGA');
     const ay=st.ayudante==='SÍ'&&st.ayudanteJS?`+${st.ayudanteJS}`:'';
     const nota=notasRuta[c.cod]?` [${notasRuta[c.cod]}]`:'';
     txt+=`${(c.cod+ay).padEnd(12)} ${st.ruta.padEnd(22)} ${tipo[0]}  ${st.matricula}${nota}\n`;
