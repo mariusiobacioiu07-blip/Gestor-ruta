@@ -558,7 +558,7 @@ let conductores = [
 
 let camiones = ['9988NDR','1867MGV','9114NFH','2135MRL','7482MPM','0094MMR','7525MSZ','5190MSD','0318NFF','0957NFD','1855MGS','2050MHK','0737MMD','2262MRL','2199MRL','3638MSY'];
 // camionesAlquiler: set de matrículas que son de alquiler
-let camionesAlquiler = new Set();
+let camionesAlquiler = new Set(['1867MGV','7525MSZ','1855MGS']);
 
 let rutas = ['HUELVA CAPITAL','SIERRA HUELVA','CADIZ COSTA','BADAJOZ MERIDA','BADAJOZ BAJO','JÓDAR','JAEN ALTO','JAEN CAP.','UBRIQUE','MONTANCHEZ','CÓRDOBA','SIERRA CORD.','CORDOBA+SIERRA CORD.','CÁCERES','CACERES+CAC.EXTRA','BAILEN','BAZA','COSTA TROPICAL','MÁLAGA','TRUJILLO','A-49','A-92EXTRA','LUCENA','A-92'];
 
@@ -613,7 +613,7 @@ function loadLS() {
     if(d.cortasDia) Object.assign(cortasDia, d.cortasDia);
     if(d.tallerList) tallerList = d.tallerList;
     if(d.notasRuta) Object.assign(notasRuta, d.notasRuta);
-    if(d.camionesAlquiler) camionesAlquiler = new Set(d.camionesAlquiler);
+    if(d.camionesAlquiler) d.camionesAlquiler.forEach(m => camionesAlquiler.add(m));
     return true;
   } catch(e){ return false; }
 }
@@ -1112,20 +1112,36 @@ function buildRuta(){
     const enTaller = tallerList.map(t=>t.mat);
     const matsDisp = camiones.filter(m => !enTaller.includes(m));
     const matSelOk = matsDisp.includes(st.matricula);
+
+    // Detectar qué matrículas están ya ocupadas por OTRO conductor
+    const matsOcupadas = new Set(activos.filter(x=>x.cod!==c.cod).map(x=>rdState[x.cod]?.matricula).filter(Boolean));
+    const miMatOcupada = st.matricula && matsOcupadas.has(st.matricula);
+    const sinMat = !st.matricula;
+
     const matsOrdenadas = matSelOk ? [st.matricula, ...matsDisp.filter(m=>m!==st.matricula)] : matsDisp;
     const matOpts = (matSelOk ? '' : '<option value="">— sin asignar —</option>') +
-      matsOrdenadas.map(m=>`<option${m===st.matricula?' selected':''}>${m}${camionesAlquiler.has(m)?' (ALQ)':''}</option>`).join('');
+      matsOrdenadas.map(m=>{
+        const ocupada = matsOcupadas.has(m);
+        const alq = camionesAlquiler.has(m);
+        const label = `${ocupada?'⚠️ ':''}${m}${alq?' (ALQ)':''}${ocupada?' — EN USO':''}`;
+        return `<option value="${m}"${m===st.matricula?' selected':''}>${label}</option>`;
+      }).join('');
     const rutaOpts=rutas.map(r=>`<option${r===st.ruta?' selected':''}>${r}</option>`).join('');
     const ayOpts=['NO','SÍ'].map(a=>`<option${st.ayudante===a?' selected':''}>${a}</option>`).join('');
     const jsOpts=activos.filter(x=>x.cod!==c.cod).map(x=>`<option${st.ayudanteJS===x.cod?' selected':''}>${x.cod}</option>`).join('');
     const nota = notasRuta[c.cod] || '';
     const matEsAlq = camionesAlquiler.has(st.matricula);
 
-    return `<tr${matEsAlq?' style="background:rgba(255,77,109,0.05)"':''}>
-      <td><span class="ruta-cod">${c.cod}</span></td>
+    // Color de fila y texto: prioridad ⚠️ amarillo > alquiler rojo
+    const filaStyle = (miMatOcupada || sinMat) ? 'background:rgba(255,190,11,0.08)' : matEsAlq ? 'background:rgba(255,77,109,0.05)' : '';
+    const matStyle = miMatOcupada ? 'color:#ffbe0b;font-weight:700' : sinMat ? '' : matEsAlq ? 'color:var(--red);font-weight:700' : '';
+    const alqBadge = matEsAlq && !sinMat ? '<span style="font-size:9px;background:rgba(255,77,109,0.2);color:var(--red);border-radius:3px;padding:1px 4px;margin-left:4px">ALQ</span>' : '';
+
+    return `<tr${filaStyle?' style="'+filaStyle+'"':''}>
+      <td><span class="ruta-cod">${c.cod}</span>${miMatOcupada?'<span title="Matrícula en uso por otro conductor" style="margin-left:4px;font-size:13px">⚠️</span>':sinMat?'<span title="Sin matrícula asignada" style="margin-left:4px;font-size:13px">⚠️</span>':''}</td>
       <td><span class="tipo-pill ${tp}">${tipo}</span></td>
       <td><select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)">${rutaOpts}</select></td>
-      <td><select class="rd-select" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matEsAlq?'color:var(--red);':''}">${matOpts}</select></td>
+      <td><select class="rd-select" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matStyle}">${matOpts}</select>${alqBadge}</td>
       <td>
         <select class="rd-select" data-cod="${c.cod}" data-f="ayudante" onchange="upRD(this)" style="margin-bottom:4px">${ayOpts}</select>
         <div id="ay-${c.cod}" style="display:${st.ayudante==='SÍ'?'block':'none'}">
@@ -1145,7 +1161,14 @@ function upRD(el){
   const cod=el.dataset.cod, f=el.dataset.f;
   rdState[cod][f]=el.value;
   if(f==='ayudante'){const d=document.getElementById('ay-'+cod);if(d)d.style.display=el.value==='SÍ'?'block':'none';}
+  // Si cambia matrícula, quitársela a quien la tuviera antes
+  if(f==='matricula' && el.value){
+    Object.keys(rdState).forEach(otro=>{
+      if(otro!==cod && rdState[otro].matricula===el.value) rdState[otro].matricula='';
+    });
+  }
   saveLS();
+  if(f==='matricula') setTimeout(()=>buildRuta(), 0);
 }
 
 // ═══════════════════════════════════════
