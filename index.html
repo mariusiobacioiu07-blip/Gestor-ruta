@@ -463,6 +463,12 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   <div class="modal">
     <div class="modal-title">Nueva <em>matrícula</em></div>
     <div class="form-g"><label class="form-l">Matrícula</label><input type="text" class="form-input" id="cam-mat" placeholder="0000ABC"></div>
+    <div class="form-g"><label class="form-l">Tipo</label>
+      <select class="form-input" id="cam-tipo">
+        <option value="empresa">🏢 De la empresa</option>
+        <option value="alquiler">🔴 De alquiler</option>
+      </select>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-s" onclick="closeModal('m-new-cam')">Cancelar</button>
       <button class="btn btn-p" onclick="addCamion()">Añadir</button>
@@ -551,6 +557,8 @@ let conductores = [
 ];
 
 let camiones = ['9988NDR','1867MGV','9114NFH','2135MRL','7482MPM','0094MMR','7525MSZ','5190MSD','0318NFF','0957NFD','1855MGS','2050MHK','0737MMD','2262MRL','2199MRL','3638MSY'];
+// camionesAlquiler: set de matrículas que son de alquiler
+let camionesAlquiler = new Set();
 
 let rutas = ['HUELVA CAPITAL','SIERRA HUELVA','CADIZ COSTA','BADAJOZ MERIDA','BADAJOZ BAJO','JÓDAR','JAEN ALTO','JAEN CAP.','UBRIQUE','MONTANCHEZ','CÓRDOBA','SIERRA CORD.','CORDOBA+SIERRA CORD.','CÁCERES','CACERES+CAC.EXTRA','BAILEN','BAZA','COSTA TROPICAL','MÁLAGA','TRUJILLO','A-49','A-92EXTRA','LUCENA','A-92'];
 
@@ -583,7 +591,8 @@ function saveLS() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
       conductores, camiones, rutas, historial, planData, planGenerado,
-      rdState, tipos, cortasDia, tallerList, notasRuta
+      rdState, tipos, cortasDia, tallerList, notasRuta,
+      camionesAlquiler: [...camionesAlquiler]
     }));
   } catch(e){ console.warn('localStorage no disponible', e); }
 }
@@ -604,6 +613,7 @@ function loadLS() {
     if(d.cortasDia) Object.assign(cortasDia, d.cortasDia);
     if(d.tallerList) tallerList = d.tallerList;
     if(d.notasRuta) Object.assign(notasRuta, d.notasRuta);
+    if(d.camionesAlquiler) camionesAlquiler = new Set(d.camionesAlquiler);
     return true;
   } catch(e){ return false; }
 }
@@ -821,12 +831,12 @@ function setCortasDia(dia, val) {
 
 function toggleCelda(cod, dia) {
   if(!planData[cod] || !planData[cod][dia]) return;
-  if(cod === 'JS228') { toast('⭐ JS228 siempre CORTA'); return; }
-  const ciclo = {'CORTA':'LARGA','LARGA':'COMP','COMP':'CORTA'};
+  const cicloNormal = {'CORTA':'LARGA','LARGA':'COMP','COMP':'CORTA'};
+  const cicloJS228 = {'CORTA':'LARGA','LARGA':'CORTA'};
+  const ciclo = cod === 'JS228' ? cicloJS228 : cicloNormal;
   const anterior = planData[cod][dia];
   const nuevo = ciclo[anterior] || 'CORTA';
   planData[cod][dia] = nuevo;
-  // Registrar en historial solo cambios manuales
   historial.unshift({fecha:hoyFmt(), cod, tipo:'manual',
     det:`Planif. día ${String(dia).padStart(2,'0')}/06: ${anterior} → ${nuevo}${nuevo==='COMP'?' (ruta compartida/libre)':''}`});
   saveLS(); renderPlan();
@@ -998,6 +1008,7 @@ function addConductor() {
   if(!cod){toast('⚠️ Introduce un código',true);return;}
   if(conductores.find(c=>c.cod===cod)){toast('⚠️ Ya existe ese código',true);return;}
   conductores.push({cod,mat,estado,vac:null,bajaDesde:null});
+  conductores.sort((a,b)=>a.cod.localeCompare(b.cod, undefined, {numeric:true}));
   historial.unshift({fecha:hoyFmt(),cod,tipo:'alta',det:'Nuevo conductor añadido'});
   closeModal('m-new-cond');
   saveLS(); buildCond(); buildDash();
@@ -1049,6 +1060,7 @@ function alta(cod){
   if(!c)return;
   historial.unshift({fecha:hoyFmt(),cod,tipo:'alta',det:`Alta — venía de ${c.estado==='baja'?'baja médica':'vacaciones'}`});
   c.estado='activo'; c.vac=null; c.bajaDesde=null;
+  conductores.sort((a,b)=>a.cod.localeCompare(b.cod, undefined, {numeric:true}));
   saveLS(); buildCond(); buildDash();
   toast('✅ '+cod+' dado de alta');
 }
@@ -1102,17 +1114,18 @@ function buildRuta(){
     const matSelOk = matsDisp.includes(st.matricula);
     const matsOrdenadas = matSelOk ? [st.matricula, ...matsDisp.filter(m=>m!==st.matricula)] : matsDisp;
     const matOpts = (matSelOk ? '' : '<option value="">— sin asignar —</option>') +
-      matsOrdenadas.map(m=>`<option${m===st.matricula?' selected':''}>${m}</option>`).join('');
+      matsOrdenadas.map(m=>`<option${m===st.matricula?' selected':''}>${m}${camionesAlquiler.has(m)?' (ALQ)':''}</option>`).join('');
     const rutaOpts=rutas.map(r=>`<option${r===st.ruta?' selected':''}>${r}</option>`).join('');
     const ayOpts=['NO','SÍ'].map(a=>`<option${st.ayudante===a?' selected':''}>${a}</option>`).join('');
     const jsOpts=activos.filter(x=>x.cod!==c.cod).map(x=>`<option${st.ayudanteJS===x.cod?' selected':''}>${x.cod}</option>`).join('');
     const nota = notasRuta[c.cod] || '';
+    const matEsAlq = camionesAlquiler.has(st.matricula);
 
-    return `<tr>
+    return `<tr${matEsAlq?' style="background:rgba(255,77,109,0.05)"':''}>
       <td><span class="ruta-cod">${c.cod}</span></td>
       <td><span class="tipo-pill ${tp}">${tipo}</span></td>
       <td><select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)">${rutaOpts}</select></td>
-      <td><select class="rd-select" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)">${matOpts}</select></td>
+      <td><select class="rd-select" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matEsAlq?'color:var(--red);':''}">${matOpts}</select></td>
       <td>
         <select class="rd-select" data-cod="${c.cod}" data-f="ayudante" onchange="upRD(this)" style="margin-bottom:4px">${ayOpts}</select>
         <div id="ay-${c.cod}" style="display:${st.ayudante==='SÍ'?'block':'none'}">
@@ -1255,7 +1268,7 @@ function generarImagen(){
     ctx.fillText(rutaStr, 100, cy);
 
     // MATRÍCULA
-    ctx.fillStyle = '#555555';
+    ctx.fillStyle = camionesAlquiler.has(st.matricula) ? '#cc2200' : '#555555';
     ctx.font = 'bold 14px monospace';
     ctx.fillText(st.matricula, 420, cy);
 
@@ -1374,11 +1387,13 @@ function showImgModal(dataURL, fechaFmt){
 // GESTIÓN
 // ═══════════════════════════════════════
 function buildGestion(){
-  document.getElementById('cam-lista').innerHTML=camiones.map(m=>`
-    <div class="list-item">
-      <span class="list-cod">${m}</span>
+  document.getElementById('cam-lista').innerHTML=camiones.map(m=>{
+    const esAlq=camionesAlquiler.has(m);
+    return `<div class="list-item">
+      <span class="list-cod" style="${esAlq?'color:var(--red)':''}">${m}${esAlq?' <span style="font-size:10px;opacity:0.7">ALQUILER</span>':''}</span>
       <button class="btn btn-r btn-sm" onclick="delCam('${m}')">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('rutas-lista').innerHTML=rutas.map(r=>`
     <div class="list-item">
       <span style="font-size:13px;font-weight:600">${r}</span>
@@ -1388,15 +1403,19 @@ function buildGestion(){
 
 function addCamion(){
   const mat=document.getElementById('cam-mat').value.trim().toUpperCase();
+  const tipo=document.getElementById('cam-tipo').value;
   if(!mat){toast('⚠️ Introduce matrícula',true);return;}
   if(camiones.includes(mat)){toast('⚠️ Ya existe',true);return;}
   camiones.push(mat);
+  if(tipo==='alquiler') camionesAlquiler.add(mat);
   closeModal('m-new-cam');
   document.getElementById('cam-mat').value='';
-  saveLS();buildGestion();buildCam();toast('✅ '+mat+' añadido');
+  document.getElementById('cam-tipo').value='empresa';
+  saveLS();buildGestion();buildCam();toast('✅ '+mat+(tipo==='alquiler'?' (alquiler)':'')+' añadido');
 }
 function delCam(m){
   camiones=camiones.filter(x=>x!==m);
+  camionesAlquiler.delete(m);
   tallerList=tallerList.filter(t=>t.mat!==m);
   Object.keys(rdState).forEach(cod=>{if(rdState[cod].matricula===m)rdState[cod].matricula='';});
   saveLS();buildGestion();buildCam();buildDash();toast('🗑️ '+m+' eliminado');
@@ -1410,14 +1429,16 @@ function buildCam(){
   const disponibles=camiones.filter(m=>!enTaller.includes(m));
   document.getElementById('cam-disp-lista').innerHTML=disponibles.length===0
     ?'<div class="list-item" style="color:var(--txt2);font-size:12px;padding:14px 16px">Sin camiones disponibles</div>'
-    :disponibles.map(m=>`
-      <div class="list-item">
-        <span class="list-cod">${m}</span>
+    :disponibles.map(m=>{
+      const esAlq=camionesAlquiler.has(m);
+      return `<div class="list-item">
+        <span class="list-cod" style="${esAlq?'color:var(--red)':''}">${m}${esAlq?' <span style="font-size:10px;opacity:0.7">ALQ</span>':''}</span>
         <div style="display:flex;gap:8px">
           <button class="btn btn-pu btn-sm" onclick="addTallerDirecto('${m}')">🔧 Taller</button>
           <button class="btn btn-r btn-sm" onclick="delCam('${m}')">✕</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   document.getElementById('cam-taller-lista').innerHTML=tallerList.length===0
     ?'<div class="list-item" style="color:var(--txt2);font-size:12px;padding:14px 16px">Ninguno en taller</div>'
     :tallerList.map(t=>`
