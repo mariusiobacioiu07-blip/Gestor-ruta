@@ -92,17 +92,18 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
 .alert.p{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);color:var(--pur);}
 
 .ruta-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.ruta-table{border-collapse:collapse;min-width:640px;width:100%;}
-.ruta-table th{padding:10px 8px;background:var(--s2);font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:1px;font-weight:600;border-bottom:1px solid var(--brd);text-align:left;white-space:nowrap;}
-.ruta-table td{padding:6px 6px;border-bottom:1px solid rgba(30,45,69,0.5);vertical-align:middle;}
+.ruta-table{border-collapse:collapse;min-width:480px;width:100%;}
+.ruta-table th{padding:7px 4px;background:var(--s2);font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-bottom:1px solid var(--brd);text-align:left;white-space:nowrap;}
+.ruta-table td{padding:4px 3px;border-bottom:1px solid rgba(30,45,69,0.5);vertical-align:middle;}
 .ruta-table tr:last-child td{border-bottom:none;}
-.ruta-cod{color:var(--grn);font-weight:800;font-family:monospace;font-size:14px;}
-.tipo-pill{display:inline-block;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;min-width:52px;text-align:center;}
+.ruta-cod{color:var(--grn);font-weight:800;font-family:monospace;font-size:12px;}
+.tipo-pill{display:inline-block;padding:3px 5px;border-radius:5px;font-size:10px;font-weight:700;min-width:40px;text-align:center;}
 .tipo-pill.c{background:rgba(0,214,143,0.15);color:var(--grn);}
 .tipo-pill.l{background:rgba(255,77,109,0.15);color:var(--red);}
-.rd-select{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:7px 6px;border-radius:8px;font-size:12px;font-family:inherit;width:100%;min-width:120px;}
+.rd-select{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:5px 4px;border-radius:6px;font-size:12px;font-family:inherit;width:100%;min-width:90px;}
 .rd-select:focus{outline:none;border-color:var(--grn);}
-.rd-input{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:7px 8px;border-radius:8px;font-size:12px;font-family:inherit;width:100%;min-width:100px;}
+.rd-select.mat-sel{font-size:13px;font-weight:700;letter-spacing:0.3px;min-width:105px;}
+.rd-input{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:4px 6px;border-radius:6px;font-size:11px;font-family:inherit;width:100%;min-width:70px;}
 .rd-input:focus{outline:none;border-color:var(--grn);}
 .rd-input::placeholder{color:var(--txt2);}
 
@@ -187,11 +188,11 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     <button class="btn btn-p btn-full" onclick="goScreen('ruta')">🚛 Preparar ruta del día</button>
   </div>
   <div class="card">
-    <div class="card-head">Disponibles mañana</div>
+    <div class="card-head">📊 Resumen del mes</div>
     <div id="dash-disp"></div>
   </div>
   <div class="card">
-    <div class="card-head">Ausentes / Taller</div>
+    <div class="card-head">⚠️ Ausentes / Taller</div>
     <div id="dash-aus"></div>
   </div>
 </div>
@@ -247,7 +248,6 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
             <th>RUTA / DESTINO</th>
             <th>MATRÍCULA</th>
             <th>AYUDANTE</th>
-            <th>NOTA</th>
           </tr>
         </thead>
         <tbody id="rd-tbody"></tbody>
@@ -332,9 +332,23 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     <div class="stat b"><div class="stat-label">Conductores</div><div class="stat-value" style="font-size:26px;color:var(--blu)" id="plan-ncond">—</div></div>
   </div>
   <div class="alert y" id="plan-aviso" style="display:none">⚠️ <span id="plan-aviso-txt"></span></div>
+
+  <!-- Navegación semanal -->
+  <div id="plan-nav-semana" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px">
+    <button class="btn btn-s btn-sm" onclick="planNavSemana(-1)" style="font-size:18px;padding:8px 14px">‹</button>
+    <div style="text-align:center;flex:1">
+      <div style="font-size:12px;font-weight:700;color:var(--txt)" id="plan-semana-label">—</div>
+      <div style="font-size:10px;color:var(--txt2)">Semana junio 2026</div>
+    </div>
+    <button class="btn btn-s btn-sm" onclick="planNavSemana(1)" style="font-size:18px;padding:8px 14px">›</button>
+  </div>
+  <div style="text-align:center;margin-bottom:10px">
+    <button class="btn btn-sm" id="btn-vista-plan" onclick="toggleVistaPlan()" style="background:rgba(72,149,239,0.1);color:var(--blu);border:1px solid rgba(72,149,239,0.25);font-size:11px">📅 Ver mes completo</button>
+  </div>
+
   <div class="card">
     <div class="card-head">
-      <span>Tabla junio 2026</span>
+      <span id="plan-tabla-titulo">Semana actual</span>
       <span style="font-size:10px;color:var(--txt2)">toca celda · desliza →</span>
     </div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
@@ -354,7 +368,7 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     <button class="btn btn-p btn-sm" onclick="openModal('m-new-cam')">+ Añadir</button>
   </div>
   <div class="card">
-    <div class="card-head">🟢 Disponibles</div>
+    <div class="card-head">🟢 Disponibles <span id="cam-disp-count" style="color:var(--grn);font-weight:800"></span></div>
     <div id="cam-disp-lista"></div>
   </div>
   <div class="card">
@@ -366,6 +380,165 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   </div>
 </div>
 
+<!-- ═══ TUTORIAL ═══ -->
+<div class="screen" id="sc-tutorial">
+  <div class="screen-header">
+    <div class="screen-title">❓ <em>Ayuda</em></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-head" style="background:rgba(0,214,143,0.06)">📊 Dashboard — Pantalla principal</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--txt);line-height:1.7">
+      <p style="margin-bottom:10px">Es lo primero que ves al abrir la app. Te da el resumen del día de <strong style="color:var(--grn)">mañana</strong> de un vistazo.</p>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--grn)">
+        <div style="font-size:11px;font-weight:700;color:var(--grn);margin-bottom:4px">Las 4 tarjetas de arriba:</div>
+        <div style="color:var(--txt2);font-size:12px">🟢 Conductores disponibles · 🔴 Bajas · 🟡 Vacaciones · 🟣 Taller. Puedes tocar cada una para ir a esa sección.</div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--yel)">
+        <div style="font-size:11px;font-weight:700;color:var(--yel);margin-bottom:4px">Alertas automáticas:</div>
+        <div style="color:var(--txt2);font-size:12px">Aparecen si algún conductor tiene vacaciones en los próximos 3 días, o si alguien lleva 4 rutas largas o cortas seguidas.</div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;border-left:3px solid var(--blu)">
+        <div style="font-size:11px;font-weight:700;color:var(--blu);margin-bottom:4px">Resumen del mes y ranking:</div>
+        <div style="color:var(--txt2);font-size:12px">Progreso de junio, los 3 conductores con más largas este mes y el estado de la flota (propios / alquiler / taller).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONDUCTORES -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-head" style="background:rgba(72,149,239,0.06)">👤 Conductores</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--txt);line-height:1.7">
+      <p style="margin-bottom:10px">Aquí gestionas a toda la plantilla. Los activos aparecen arriba, los de vacaciones y baja abajo.</p>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--blu)">
+        <div style="font-size:11px;font-weight:700;color:var(--blu);margin-bottom:4px">Botones de cada conductor:</div>
+        <div style="color:var(--txt2);font-size:12px;display:flex;flex-direction:column;gap:4px">
+          <span>📊 <strong style="color:var(--grn)">Stats</strong> — Ver resumen del mes: cortas, largas, racha actual e historial</span>
+          <span>🏖️ <strong style="color:var(--yel)">Vacaciones</strong> — Poner fechas de vacaciones (pasa a la sección de abajo)</span>
+          <span>🏥 <strong style="color:var(--red)">Baja</strong> — Registrar baja médica con fecha de inicio</span>
+          <span>📅 <strong style="color:var(--blu)">Ausencia</strong> — Ausencia puntual de uno o varios días (médico, asuntos, etc.)</span>
+          <span>🚪 — Despedir al conductor (lo elimina del sistema)</span>
+        </div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;border-left:3px solid var(--grn)">
+        <div style="font-size:11px;font-weight:700;color:var(--grn);margin-bottom:4px">Dar de alta:</div>
+        <div style="color:var(--txt2);font-size:12px">Cuando vuelve de vacaciones o baja, toca el botón ✅ Alta en la sección correspondiente. Vuelve automáticamente a activos.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RUTA DEL DIA -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-head" style="background:rgba(255,77,109,0.06)">🚛 Ruta del Día</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--txt);line-height:1.7">
+      <p style="margin-bottom:10px">La pantalla principal del encargado. Se usa cada mañana para preparar y compartir las rutas del día.</p>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--red)">
+        <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">Cómo funciona la tabla:</div>
+        <div style="color:var(--txt2);font-size:12px;display:flex;flex-direction:column;gap:5px">
+          <span>• <strong style="color:var(--txt)">COD</strong> — Código del conductor. ⚠️ aparece si se ha quedado sin matrícula.</span>
+          <span>• <strong style="color:var(--txt)">TIPO</strong> — CORTA o LARGA según la planificación mensual (se puede cambiar tocando la celda en Planificación).</span>
+          <span>• <strong style="color:var(--txt)">RUTA</strong> — Elige el destino del conductor. Puedes añadir una segunda ruta (+) si hace doble.</span>
+          <span>• <strong style="color:var(--txt)">MATRÍCULA</strong> — Selecciona el camión. Si asignas una matrícula que ya lleva otro, ese conductor pierde la suya y le aparece ⚠️.</span>
+          <span>• <strong style="color:var(--txt)">AYUDANTE</strong> — Si lleva acompañante, elige SÍ y selecciona el código JS.</span>
+        </div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--grn)">
+        <div style="font-size:11px;font-weight:700;color:var(--grn);margin-bottom:4px">Exportar:</div>
+        <div style="color:var(--txt2);font-size:12px">📋 <strong>Copiar texto</strong> — Copia la lista en formato texto para pegar en WhatsApp.<br>📸 <strong>Generar imagen</strong> — Crea una imagen tipo pizarra para mandar al grupo. Si algún conductor no tiene matrícula, avisa antes de exportar.</div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;border-left:3px solid var(--pur)">
+        <div style="font-size:11px;font-weight:700;color:var(--pur);margin-bottom:4px">Camiones en Taller:</div>
+        <div style="color:var(--txt2);font-size:12px">Los camiones en taller aparecen en esta sección y en la imagen exportada. Añade con + Añadir y retíralos con ✅ Listo cuando salgan.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLANIFICACION -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-head" style="background:rgba(255,190,11,0.06)">📅 Planificación Mensual</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--txt);line-height:1.7">
+      <p style="margin-bottom:10px">Tabla de cortas y largas para todo junio. Se genera automáticamente pero puedes editar cualquier celda.</p>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--yel)">
+        <div style="font-size:11px;font-weight:700;color:var(--yel);margin-bottom:4px">Vista semanal (por defecto):</div>
+        <div style="color:var(--txt2);font-size:12px">Muestra la semana actual. Usa las flechas ‹ › para ir a la semana anterior o siguiente. Toca "📅 Ver mes completo" para ver todos los días de junio a la vez.</div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--grn)">
+        <div style="font-size:11px;font-weight:700;color:var(--grn);margin-bottom:4px">Las celdas C / L / CO:</div>
+        <div style="color:var(--txt2);font-size:12px"><strong style="color:var(--grn)">C</strong> = Corta · <strong style="color:var(--red)">L</strong> = Larga · <strong style="color:var(--yel)">CO</strong> = Compartida (va en camión de otro).<br>Toca cualquier celda para cambiar entre C → L → CO → C. Los cambios se guardan automáticamente.</div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--blu)">
+        <div style="font-size:11px;font-weight:700;color:var(--blu);margin-bottom:4px">Fila de CORTAS (azul):</div>
+        <div style="color:var(--txt2);font-size:12px">El número azul de cada columna indica cuántas rutas cortas hay ese día. Tócalo para cambiarlo — el algoritmo reajusta automáticamente quién hace corta ese día.</div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;border-left:3px solid var(--pur)">
+        <div style="font-size:11px;font-weight:700;color:var(--pur);margin-bottom:4px">⚡ Recalcular:</div>
+        <div style="color:var(--txt2);font-size:12px">Regenera la planificación de cero intentando equilibrar las largas entre conductores. JS228 siempre tiene corta.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMIONES -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-head" style="background:rgba(168,85,247,0.06)">🚚 Camiones</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--txt);line-height:1.7">
+      <p style="margin-bottom:10px">Lista de todos los camiones de la flota, separados entre disponibles y en taller.</p>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--grn)">
+        <div style="font-size:11px;font-weight:700;color:var(--grn);margin-bottom:4px">Disponibles:</div>
+        <div style="color:var(--txt2);font-size:12px">Los camiones listos para usar. Los de <strong style="color:var(--red)">alquiler</strong> aparecen en rojo con la etiqueta ALQ. Puedes mandarlos directamente al taller con 🔧 Taller.</div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;border-left:3px solid var(--pur)">
+        <div style="font-size:11px;font-weight:700;color:var(--pur);margin-bottom:4px">En Taller:</div>
+        <div style="color:var(--txt2);font-size:12px">Camiones que no están disponibles. Cuando salgan del taller, toca ✅ Listo y vuelven a disponibles. Los camiones en taller <strong style="color:var(--txt)">no aparecen en el selector de matrícula</strong> de la Ruta del día.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-head" style="background:rgba(0,214,143,0.06)">📋 Historial</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--txt);line-height:1.7">
+      <p style="margin-bottom:10px">Registro cronológico de todo lo que ha pasado: cambios de planificación, vacaciones, bajas, altas, notas y taller.</p>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--grn)">
+        <div style="font-size:11px;font-weight:700;color:var(--grn);margin-bottom:4px">Filtros:</div>
+        <div style="color:var(--txt2);font-size:12px">Usa los botones de colores (Vac. / Baja / Taller / Notas / Alta) para filtrar por tipo de evento. "Todos" muestra todo.</div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px 12px;border-left:3px solid var(--red)">
+        <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">Resumen del mes:</div>
+        <div style="color:var(--txt2);font-size:12px">Debajo del historial hay una barra por conductor con sus cortas y largas del mes. Toca cualquier barra para ver las estadísticas detalladas de ese conductor.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSEJOS RAPIDOS -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-head" style="background:rgba(72,149,239,0.06)">💡 Consejos rápidos</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--txt);line-height:1.7;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px">💾</span>
+        <span style="color:var(--txt2)">Todo se guarda automáticamente en el móvil. No hay que tocar nada para guardar.</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px">🔄</span>
+        <span style="color:var(--txt2)">La planificación y la Ruta del día están sincronizadas. El tipo (C/L) de la ruta viene directo de la planificación mensual.</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px">⚠️</span>
+        <span style="color:var(--txt2)">Si asignas una matrícula que ya tiene otro conductor, la app se la quita a ese conductor automáticamente y le pone el aviso ⚠️ en su fila.</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px">📸</span>
+        <span style="color:var(--txt2)">En iPhone: al generar la imagen, mantén pulsada la foto → "Añadir a Fotos" para guardarla y poder compartirla por WhatsApp.</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px">🔴</span>
+        <span style="color:var(--txt2)">Los camiones en rojo son de alquiler. Se pueden usar igual pero aparecen diferenciados en toda la app y en la imagen exportada.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
 <!-- ═══ BOTTOM NAV ═══ -->
 <nav class="nav">
   <button class="nav-btn on" id="nav-dash" onclick="goScreen('dash')"><span>📊</span>Dashboard</button>
@@ -374,6 +547,7 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   <button class="nav-btn" id="nav-cam" onclick="goScreen('cam')"><span>🚚</span>Camiones</button>
   <button class="nav-btn" id="nav-plan" onclick="goScreen('plan')"><span>📅</span>Planific.</button>
   <button class="nav-btn" id="nav-hist" onclick="goScreen('hist')"><span>📋</span>Historial</button>
+  <button class="nav-btn" id="nav-tutorial" onclick="goScreen('tutorial')"><span>❓</span>Ayuda</button>
 </nav>
 
 <!-- ═══ MODALES ═══ -->
@@ -476,6 +650,30 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   </div>
 </div>
 
+<div class="modal-ov" id="m-ausencia">
+  <div class="modal">
+    <div class="modal-title">📅 Ausencia puntual — <em id="aus-cod-title">—</em></div>
+    <input type="hidden" id="aus-cod">
+    <div class="form-g"><label class="form-l">Motivo</label>
+      <select class="form-input" id="aus-motivo">
+        <option>Asuntos personales</option>
+        <option>Día de médico</option>
+        <option>Taller / Recoger camión</option>
+        <option>Formación</option>
+        <option>Otro</option>
+      </select>
+    </div>
+    <div class="form-row2">
+      <div class="form-g"><label class="form-l">Desde</label><input type="date" class="form-input" id="aus-ini"></div>
+      <div class="form-g"><label class="form-l">Hasta</label><input type="date" class="form-input" id="aus-fin"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-ausencia')">Cancelar</button>
+      <button class="btn btn-p" onclick="guardarAusencia()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-ov" id="m-new-ruta">
   <div class="modal">
     <div class="modal-title">Nueva <em>ruta</em></div>
@@ -525,6 +723,17 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   </div>
 </div>
 
+<!-- Modal estadísticas conductor -->
+<div class="modal-ov" id="m-cond-stats">
+  <div class="modal" style="padding:24px">
+    <div class="modal-title" style="font-size:17px;margin-bottom:4px">📊 <em id="mcs-cod">—</em> — Mes</div>
+    <div id="mcs-content" style="margin-bottom:20px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-s btn-full" onclick="closeModal('m-cond-stats')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast-el"></div>
 
 <script>
@@ -557,10 +766,10 @@ let conductores = [
 ];
 
 let camiones = ['9988NDR','1867MGV','9114NFH','2135MRL','7482MPM','0094MMR','7525MSZ','5190MSD','0318NFF','0957NFD','1855MGS','2050MHK','0737MMD','2262MRL','2199MRL','3638MSY'];
-// camionesAlquiler: set de matrículas que son de alquiler
 let camionesAlquiler = new Set(['1867MGV','7525MSZ','1855MGS']);
+let ausenciasPuntuales = {};
 
-let rutas = ['HUELVA CAPITAL','SIERRA HUELVA','CADIZ COSTA','BADAJOZ MERIDA','BADAJOZ BAJO','JÓDAR','JAEN ALTO','JAEN CAP.','UBRIQUE','MONTANCHEZ','CÓRDOBA','SIERRA CORD.','CORDOBA+SIERRA CORD.','CÁCERES','CACERES+CAC.EXTRA','BAILEN','BAZA','COSTA TROPICAL','MÁLAGA','TRUJILLO','A-49','A-92EXTRA','LUCENA','A-92'];
+let rutas = ['HUELVA CAPITAL','SIERRA HUELVA','CADIZ COSTA','BADAJOZ MERIDA','BADAJOZ BAJO','JÓDAR','JAEN ALTO','JAEN CAP.','UBRIQUE','MONTANCHEZ','CÓRDOBA','SIERRA CORD.','CÁCERES','CAC.EXTRA','BAILEN','BAZA','COSTA TROPICAL','MÁLAGA','TRUJILLO','A-49','A-92EXTRA','LUCENA','A-92'];
 
 let historial = [
   {fecha:'04/06 21:18',cod:'JS190',tipo:'manual',det:'LARGA → CORTA (manual)'},
@@ -592,7 +801,7 @@ function saveLS() {
     localStorage.setItem(LS_KEY, JSON.stringify({
       conductores, camiones, rutas, historial, planData, planGenerado,
       rdState, tipos, cortasDia, tallerList, notasRuta,
-      camionesAlquiler: [...camionesAlquiler]
+      camionesAlquiler: [...camionesAlquiler], ausenciasPuntuales
     }));
   } catch(e){ console.warn('localStorage no disponible', e); }
 }
@@ -614,6 +823,7 @@ function loadLS() {
     if(d.tallerList) tallerList = d.tallerList;
     if(d.notasRuta) Object.assign(notasRuta, d.notasRuta);
     if(d.camionesAlquiler) d.camionesAlquiler.forEach(m => camionesAlquiler.add(m));
+    if(d.ausenciasPuntuales) Object.assign(ausenciasPuntuales, d.ausenciasPuntuales);
     return true;
   } catch(e){ return false; }
 }
@@ -628,7 +838,7 @@ function goScreen(id) {
   const navBtn = document.getElementById('nav-'+id);
   if(navBtn) navBtn.classList.add('on');
   window.scrollTo(0,0);
-  const builders = {dash:buildDash,cond:buildCond,ruta:buildRuta,plan:buildPlan,gestion:buildGestion,hist:buildHist,cam:buildCam};
+  const builders = {dash:buildDash,cond:buildCond,ruta:buildRuta,plan:buildPlan,gestion:buildGestion,hist:buildHist,cam:buildCam,tutorial:()=>{}};
   if(builders[id]) builders[id]();
 }
 
@@ -657,26 +867,173 @@ function buildDash() {
   const activos = conductores.filter(c=>c.estado==='activo');
   const vacs = conductores.filter(c=>c.estado==='vac');
   const bajas = conductores.filter(c=>c.estado==='baja');
+  const hoy = new Date();
+  const manana = new Date(); manana.setDate(hoy.getDate()+1);
+  const mananaISO_ = manana.toISOString().split('T')[0];
+  const manDia = manana.getDate();
+  const manDiaKey = String(manDia);
 
-  document.getElementById('dash-stats').innerHTML = `
-    <div class="stat"><div class="stat-label">Disponibles mañana</div><div class="stat-value">${activos.length}</div><div class="stat-sub">${mananaFmt()}</div></div>
-    <div class="stat y"><div class="stat-label">Vacaciones</div><div class="stat-value" style="color:var(--yel)">${vacs.length}</div><div class="stat-sub">${vacs.map(c=>c.cod).join(' · ')||'—'}</div></div>
-    <div class="stat r"><div class="stat-label">Bajas médicas</div><div class="stat-value">${bajas.length}</div><div class="stat-sub">${bajas.slice(0,2).map(c=>c.cod).join(' · ')}${bajas.length>2?'...':''}</div></div>
-    <div class="stat p"><div class="stat-label">En Taller</div><div class="stat-value" style="color:var(--pur)">${tallerList.length}</div><div class="stat-sub">${tallerList.slice(0,2).map(t=>t.mat).join(' · ')||'ninguno'}</div></div>
-  `;
+  // Cortas/largas mañana
+  let cortasMan=0, largasMan=0;
+  activos.forEach(c=>{
+    const t=planData[c.cod]&&(planData[c.cod][manDia]||planData[c.cod][manDiaKey]);
+    if(t==='CORTA'||t==='COMP') cortasMan++; else largasMan++;
+  });
+  const hayPlan = activos.some(c=>planData[c.cod]&&(planData[c.cod][manDia]||planData[c.cod][manDiaKey]));
 
-  document.getElementById('dash-disp').innerHTML = activos.map(c=>`
-    <div class="list-item">
-      <span class="list-cod">${c.cod}</span>
-      <span style="font-size:11px;color:var(--txt2)">${c.cod==='JS228'?'⭐ siempre corta':''}</span>
-    </div>`).join('');
+  // Progreso del mes
+  const diasTotales=diasLaborables();
+  const diasPasados=diasTotales.filter(d=>d<hoy.getDate()).length;
+  const pct=diasTotales.length>0?Math.round((diasPasados/diasTotales.length)*100):0;
+  const diasRestantes=diasTotales.length-diasPasados;
 
-  const ausList = [
-    ...vacs.map(c=>`<div class="list-item"><span class="list-cod">${c.cod}</span><span class="badge by">VACACIONES</span></div>`),
-    ...bajas.map(c=>`<div class="list-item"><span class="list-cod">${c.cod}</span><span class="badge br">BAJA MÉDICA</span></div>`),
-    ...tallerList.map(t=>`<div class="list-item"><span class="list-cod" style="color:var(--pur)">${t.mat}</span><span class="badge bp">TALLER${t.motivo?' — '+t.motivo:''}</span></div>`)
+  // Ranking top 3 más largas
+  const ranking=activos.filter(c=>c.cod!=='JS228').map(c=>({
+    cod:c.cod,
+    largas:Object.values(planData[c.cod]||{}).filter(v=>v==='LARGA').length,
+    cortas:Object.values(planData[c.cod]||{}).filter(v=>v==='CORTA'||v==='COMP').length
+  })).sort((a,b)=>b.largas-a.largas).slice(0,3);
+
+  // Alertas vacaciones
+  const alertasVac=[];
+  conductores.forEach(c=>{
+    if(!c.vac) return;
+    if(c.vac.fin&&c.vac.fin!=='?'){
+      const [df,mf,yf]=c.vac.fin.split('/');
+      const finDate=new Date(`${yf}-${mf}-${df}`);
+      const diff=Math.round((finDate-hoy)/86400000);
+      if(diff===0) alertasVac.push({tipo:'vuelta',txt:`🎉 ${c.cod} vuelve mañana de vacaciones`});
+      else if(diff===1) alertasVac.push({tipo:'vuelta',txt:`✅ ${c.cod} vuelve en 2 días (${c.vac.fin})`});
+      else if(diff===2) alertasVac.push({tipo:'vuelta',txt:`${c.cod} vuelve en 3 días (${c.vac.fin})`});
+    }
+    if(c.vac.ini){
+      const [di,mi,yi]=c.vac.ini.split('/');
+      const iniDate=new Date(`${yi}-${mi}-${di}`);
+      const diff=Math.round((iniDate-hoy)/86400000);
+      if(diff===1) alertasVac.push({tipo:'salida',txt:`🏖️ ${c.cod} empieza vacaciones mañana`});
+      else if(diff===2) alertasVac.push({tipo:'salida',txt:`🏖️ ${c.cod} se va de vacaciones en 2 días`});
+      else if(diff===3) alertasVac.push({tipo:'salida',txt:`${c.cod} se va de vacaciones en 3 días`});
+    }
+  });
+
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat" onclick="goScreen('ruta')" style="cursor:pointer">
+      <div class="stat-label">Conductores disponibles mañana</div>
+      <div class="stat-value">${activos.length}</div>
+      <div class="stat-sub">${mananaFmt()}</div>
+    </div>
+    <div class="stat r" onclick="goScreen('cond')" style="cursor:pointer">
+      <div class="stat-label">Bajas médicas</div>
+      <div class="stat-value">${bajas.length}</div>
+      <div class="stat-sub">${bajas.slice(0,2).map(c=>c.cod.replace('JS','')).join(' · ')||'—'}${bajas.length>2?` +${bajas.length-2}`:''}</div>
+    </div>
+    <div class="stat y" onclick="goScreen('cond')" style="cursor:pointer">
+      <div class="stat-label">Vacaciones</div>
+      <div class="stat-value">${vacs.length}</div>
+      <div class="stat-sub">${vacs.slice(0,2).map(c=>c.cod.replace('JS','')).join(' · ')||'—'}${vacs.length>2?` +${vacs.length-2}`:''}</div>
+    </div>
+    <div class="stat p" onclick="goScreen('cam')" style="cursor:pointer">
+      <div class="stat-label">En Taller</div>
+      <div class="stat-value">${tallerList.length}</div>
+      <div class="stat-sub">${tallerList.slice(0,1).map(t=>t.mat).join('')||'ninguno'}</div>
+    </div>`;
+
+  // Alerta fin de mes: cuando quedan ≤7 días laborables, mostrar desequilibrio cortas/largas
+  const alertasRachas = [];
+  if(planGenerado) {
+    const diasTotalesPlan = diasLaborables();
+    const hoyDiaA = new Date().getDate();
+    const hoyMesA = new Date().getMonth();
+    const diasRestantesPlan = hoyMesA === 5
+      ? diasTotalesPlan.filter(d => d > hoyDiaA).length
+      : diasTotalesPlan.length;
+
+    if(diasRestantesPlan <= 10) {
+      // Calcular totales de cortas y largas por conductor
+      const cortasTot = {}, largasTot = {};
+      activos.forEach(c => {
+        cortasTot[c.cod] = Object.values(planData[c.cod]||{}).filter(v=>v==='CORTA'||v==='COMP').length;
+        largasTot[c.cod] = Object.values(planData[c.cod]||{}).filter(v=>v==='LARGA').length;
+      });
+      const condFiltrados = activos.filter(c => c.cod !== 'JS228');
+      const mediaC = condFiltrados.reduce((s,c)=>s+cortasTot[c.cod],0) / (condFiltrados.length||1);
+      const mediaL = condFiltrados.reduce((s,c)=>s+largasTot[c.cod],0) / (condFiltrados.length||1);
+      const desequil = condFiltrados.filter(c => Math.abs((cortasTot[c.cod]||0) - mediaC) > 2 || Math.abs((largasTot[c.cod]||0) - mediaL) > 2);
+
+      if(desequil.length > 0) {
+        const resumen = desequil.map(c => `${c.cod}: ${cortasTot[c.cod]}C/${largasTot[c.cod]}L`).join(' · ');
+        alertasRachas.push({
+          tipo: 'fin',
+          txt: `📊 Quedan ${diasRestantesPlan} días — Desequilibrio: ${resumen}`
+        });
+      } else if(diasRestantesPlan <= 7) {
+        alertasRachas.push({
+          tipo: 'ok',
+          txt: `✅ Quedan ${diasRestantesPlan} días — Reparto equilibrado este mes`
+        });
+      }
+    }
+  }
+
+  document.getElementById('dash-alerts').innerHTML=[
+    ...alertasVac.map(a=>`<div class="alert ${a.tipo==='vuelta'?'g':'y'}" onclick="goScreen('cond')" style="cursor:pointer">${a.txt}</div>`),
+    ...alertasRachas.map(a=>`<div class="alert ${a.tipo==='ok'?'g':'y'}" onclick="goScreen('plan')" style="cursor:pointer">${a.txt}</div>`)
+  ].join('');
+
+  document.getElementById('dash-disp').innerHTML=`
+    <div style="padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:12px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px">Progreso junio</span>
+        <span style="font-size:12px;color:var(--grn);font-weight:800">${diasPasados}/${diasTotales.length} días</span>
+      </div>
+      <div style="height:8px;background:var(--s3);border-radius:4px;overflow:hidden;margin-bottom:8px">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--grn),#00b377);border-radius:4px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt2)">
+        <span>${pct}% completado</span><span>${diasRestantes} días laborables restantes</span>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--brd);padding:14px 16px">
+      <div style="font-size:11px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">🏆 Más largas este mes</div>
+      ${ranking.map((r,i)=>{
+        const medals=['🥇','🥈','🥉'];
+        const total=(r.largas+r.cortas)||1;
+        const pctL=Math.round(r.largas/total*100);
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-family:monospace;font-weight:800;color:var(--txt);font-size:13px">${medals[i]} ${r.cod}</span>
+            <span style="font-size:11px"><span style="color:var(--red);font-weight:700">${r.largas}L</span> · <span style="color:var(--grn);font-weight:700">${r.cortas}C</span></span>
+          </div>
+          <div style="height:5px;background:var(--s3);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pctL}%;background:var(--red);border-radius:3px"></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="border-top:1px solid var(--brd);padding:14px 16px">
+      <div style="font-size:11px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🚛 Estado flota</div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;background:var(--s2);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--brd)">
+          <div style="font-size:22px;font-weight:800;color:var(--grn)">${camiones.length-tallerList.length-[...camionesAlquiler].filter(m=>camiones.includes(m)).length}</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:2px">propios</div>
+        </div>
+        <div style="flex:1;background:var(--s2);border-radius:10px;padding:10px;text-align:center;border:1px solid rgba(255,77,109,0.2)">
+          <div style="font-size:22px;font-weight:800;color:var(--red)">${[...camionesAlquiler].filter(m=>camiones.includes(m)).length}</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:2px">alquiler</div>
+        </div>
+        <div style="flex:1;background:var(--s2);border-radius:10px;padding:10px;text-align:center;border:1px solid rgba(168,85,247,0.2)">
+          <div style="font-size:22px;font-weight:800;color:var(--pur)">${tallerList.length}</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:2px">taller</div>
+        </div>
+      </div>
+    </div>`;
+
+  const ausList=[
+    ...vacs.map(c=>`<div class="list-item" onclick="goScreen('cond')" style="cursor:pointer"><div><span class="list-cod">${c.cod}</span><div class="list-sub">${c.vac?.fin==='?'?'Sin fecha de vuelta':'Hasta '+c.vac?.fin}</div></div><span class="badge by">🏖️ VAC</span></div>`),
+    ...bajas.map(c=>`<div class="list-item" onclick="goScreen('cond')" style="cursor:pointer"><div><span class="list-cod">${c.cod}</span><div class="list-sub">Desde ${c.bajaDesde||'—'}</div></div><span class="badge br">🏥 BAJA</span></div>`),
+    ...tallerList.map(t=>`<div class="list-item" onclick="goScreen('cam')" style="cursor:pointer"><div><span class="list-cod" style="color:var(--pur)">${t.mat}</span><div class="list-sub">${t.motivo||'En taller'} · Desde ${t.desde||'—'}</div></div><span class="badge bp">🔧 TALLER</span></div>`)
   ];
-  document.getElementById('dash-aus').innerHTML = ausList.join('') || '<div class="list-item" style="color:var(--txt2);font-size:12px">Sin ausencias ni camiones en taller</div>';
+  document.getElementById('dash-aus').innerHTML=ausList.join('')||'<div class="list-item" style="color:var(--txt2);font-size:12px;justify-content:center">✅ Sin ausencias ni camiones en taller</div>';
 }
 
 // ═══════════════════════════════════════
@@ -717,8 +1074,9 @@ function addTaller() {
   const desde = fechaISO_to_fmt(mananaISO());
   tallerList.push({mat, motivo, desde});
   historial.unshift({fecha:hoyFmt(), cod: mat, tipo:'taller', det:`Camión ${mat} en taller${motivo?' — '+motivo:''} desde ${desde}`});
+  Object.keys(rdState).forEach(cod=>{if(rdState[cod].matricula===mat) rdState[cod].matricula=''});
   closeModal('m-add-taller');
-  saveLS(); buildTallerLista(); buildDash();
+  saveLS(); buildTallerLista(); buildDash(); buildRuta();
   toast('🔧 '+mat+' en taller');
 }
 
@@ -778,6 +1136,8 @@ let planData = {};
 let planGenerado = false;
 const DEFAULT_CORTAS = 5;
 let cortasDia = {};
+let planVistaCompleta = false; // false = semanal, true = mensual
+let planSemanaOffset = 0; // 0 = semana actual, -1 anterior, +1 siguiente
 
 function algoritmo() {
   const activos = conductores.filter(c=>c.estado==='activo');
@@ -831,22 +1191,72 @@ function setCortasDia(dia, val) {
 
 function toggleCelda(cod, dia) {
   if(!planData[cod] || !planData[cod][dia]) return;
-  const cicloNormal = {'CORTA':'LARGA','LARGA':'COMP','COMP':'CORTA'};
   const cicloJS228 = {'CORTA':'LARGA','LARGA':'CORTA'};
+  const cicloNormal = {'CORTA':'LARGA','LARGA':'COMP','COMP':'CORTA'};
   const ciclo = cod === 'JS228' ? cicloJS228 : cicloNormal;
   const anterior = planData[cod][dia];
   const nuevo = ciclo[anterior] || 'CORTA';
   planData[cod][dia] = nuevo;
+  // Registrar en historial solo cambios manuales
   historial.unshift({fecha:hoyFmt(), cod, tipo:'manual',
     det:`Planif. día ${String(dia).padStart(2,'0')}/06: ${anterior} → ${nuevo}${nuevo==='COMP'?' (ruta compartida/libre)':''}`});
   saveLS(); renderPlan();
 }
 
+function planNavSemana(dir) {
+  planSemanaOffset += dir;
+  renderPlan();
+}
+
+function toggleVistaPlan() {
+  planVistaCompleta = !planVistaCompleta;
+  const btn = document.getElementById('btn-vista-plan');
+  const nav = document.getElementById('plan-nav-semana');
+  btn.textContent = planVistaCompleta ? '📅 Vista semanal' : '📅 Ver mes completo';
+  nav.style.display = planVistaCompleta ? 'none' : 'flex';
+  renderPlan();
+}
+
+function getSemanaActual() {
+  // Devuelve los días laborables de la semana que corresponde a planSemanaOffset
+  const hoy = new Date();
+  const offsetDias = planSemanaOffset * 7;
+  const refDate = new Date(hoy); refDate.setDate(hoy.getDate() + offsetDias);
+  // Lunes de esa semana
+  const diaSem = refDate.getDay(); // 0=Dom, 1=Lun...
+  const diffLunes = diaSem === 0 ? -6 : 1 - diaSem;
+  const lunes = new Date(refDate); lunes.setDate(refDate.getDate() + diffLunes);
+  const viernes = new Date(lunes); viernes.setDate(lunes.getDate() + 4);
+  const diasJun = [];
+  for(let d = new Date(lunes); d <= viernes; d.setDate(d.getDate()+1)) {
+    if(d.getMonth() === 5 && d.getDate() >= 1 && d.getDate() <= 30) { // junio 2026
+      diasJun.push(d.getDate());
+    }
+  }
+  // Label de la semana
+  const lLabel = `${String(lunes.getDate()).padStart(2,'0')}/${String(lunes.getMonth()+1).padStart(2,'0')}`;
+  const vLabel = `${String(viernes.getDate()).padStart(2,'0')}/${String(viernes.getMonth()+1).padStart(2,'0')}`;
+  return { dias: diasJun.filter(d => { const f=new Date(2026,5,d); return f.getDay()!==0&&f.getDay()!==6; }), label: `${lLabel} — ${vLabel}` };
+}
+
 function renderPlan() {
   const activos = conductores.filter(c=>c.estado==='activo');
-  const dias = diasLaborables();
+  const diasTodos = diasLaborables();
   const hoyDia = new Date().getDate();
   const hoyMes = new Date().getMonth();
+
+  let dias, tituloTabla;
+  if(planVistaCompleta) {
+    dias = diasTodos;
+    tituloTabla = 'Tabla junio 2026 (mes completo)';
+    document.getElementById('plan-semana-label').textContent = '—';
+  } else {
+    const sem = getSemanaActual();
+    dias = sem.dias.length > 0 ? sem.dias : diasTodos.slice(0,5);
+    tituloTabla = `Semana ${sem.label}`;
+    document.getElementById('plan-semana-label').textContent = sem.label;
+  }
+  if(document.getElementById('plan-tabla-titulo')) document.getElementById('plan-tabla-titulo').textContent = tituloTabla;
   document.getElementById('plan-dias').textContent = dias.length;
   document.getElementById('plan-ncond').textContent = activos.length;
   const mediaCortas = dias.length > 0
@@ -889,7 +1299,7 @@ function renderPlan() {
     const comp = Object.values(planData[c.cod]||{}).filter(v=>v==='COMP').length;
     const largas = dias.length - cortas - comp;
     html += '<tr>';
-    html += `<td style="position:sticky;left:0;background:#111827;z-index:1;padding:6px 10px;font-family:monospace;font-weight:700;font-size:12px;color:#00d68f;border-bottom:1px solid rgba(30,45,69,0.5);border-right:1px solid #1e2d45">${c.cod}</td>`;
+    html += `<td style="position:sticky;left:0;background:#111827;z-index:1;padding:6px 10px;font-family:monospace;font-weight:700;font-size:12px;color:#00d68f;border-bottom:1px solid rgba(30,45,69,0.5);border-right:1px solid #1e2d45;cursor:pointer" onclick="showCondStats('${c.cod}')">${c.cod}</td>`;
     dias.forEach(d => {
       const val = (planData[c.cod]||{})[d] || '—';
       const isC = val==='CORTA';
@@ -918,10 +1328,10 @@ function renderPlan() {
   document.getElementById('plan-tabla').innerHTML = html;
 
   document.getElementById('plan-resumen').innerHTML = activos.map(c => {
-    const cor = cortasTotales[c.cod]||0;
-    const lar = dias.length - cor;
+    const cor = Object.values(planData[c.cod]||{}).filter(v=>v==='CORTA'||v==='COMP').length;
+    const lar = diasTodos.length - cor;
     const pct = Math.round(cor/(cor+lar||1)*100);
-    return `<div class="res-item">
+    return `<div class="res-item" onclick="showCondStats('${c.cod}')" style="cursor:pointer">
       <div class="res-top">
         <span class="res-cod">${c.cod}</span>
         <span style="font-family:monospace;font-size:12px"><span style="color:#00d68f">C:${cor}</span> / <span style="color:#ff4d6d">L:${lar}</span></span>
@@ -962,22 +1372,28 @@ function buildCond() {
   const activos = conductores.filter(c=>c.estado==='activo');
   const vacs = conductores.filter(c=>c.estado==='vac');
   const bajas = conductores.filter(c=>c.estado==='baja');
+  const hoy = new Date().toISOString().split('T')[0];
 
-  document.getElementById('cond-activos').innerHTML = activos.map(c=>`
-    <div class="cond-card">
+  document.getElementById('cond-activos').innerHTML = activos.map(c=>{
+    const ausActiva=(ausenciasPuntuales[c.cod]||[]).find(a=>a.ini<=hoy&&a.fin>=hoy);
+    return `<div class="cond-card">
       <div class="cond-top">
         <span class="cond-cod">${c.cod}</span>
         <div style="display:flex;align-items:center;gap:8px">
           ${c.cod==='JS228'?'<span style="font-size:11px;color:var(--grn)">⭐ siempre corta</span>':''}
-          <span class="badge bg">ACTIVO</span>
+          ${ausActiva?`<span class="badge bb">📅 ${ausActiva.motivo.split(' ')[0]}</span>`:`<span class="badge bg">ACTIVO</span>`}
         </div>
       </div>
+      ${ausActiva?`<div style="font-size:11px;color:var(--blu);margin-bottom:8px;padding:6px 8px;background:rgba(72,149,239,0.08);border-radius:6px">📅 ${ausActiva.motivo} — hasta ${ausActiva.fin.split('-').reverse().join('/')} <button style="background:none;border:none;color:var(--red);font-size:11px;cursor:pointer;font-weight:700" onclick="borrarAusencia('${c.cod}','${ausActiva.ini}')">✕</button></div>`:''}
       <div class="cond-actions">
+        <button class="btn btn-sm" style="background:rgba(0,214,143,0.1);color:var(--grn);border:1px solid rgba(0,214,143,0.25)" onclick="showCondStats('${c.cod}')">📊 Stats</button>
         <button class="btn btn-y btn-sm" onclick="openVac('${c.cod}')">🏖️ Vacaciones</button>
         <button class="btn btn-r btn-sm" onclick="openBaja('${c.cod}')">🏥 Baja</button>
+        <button class="btn btn-sm" style="background:rgba(72,149,239,0.1);color:var(--blu);border:1px solid rgba(72,149,239,0.25)" onclick="openAusencia('${c.cod}')">📅 Ausencia</button>
         ${c.cod!=='JS228'?`<button class="btn btn-sm" style="background:#3a1a2e;color:#ff6b9d;border:1px solid #5a2a4e" onclick="confirmarDespido('${c.cod}')">🚪 Despedir</button>`:''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   document.getElementById('cond-otros').innerHTML = `
     ${vacs.length?`<div class="card"><div class="card-head">🏖️ De vacaciones</div>
@@ -985,7 +1401,7 @@ function buildCond() {
         <div><div class="list-cod">${c.cod}</div><div class="list-sub">${c.vac?.fin==='?'?'Sin fecha de vuelta':c.vac?.ini+' → '+c.vac?.fin}</div></div>
         <div style="display:flex;gap:6px">
           <button class="btn btn-p btn-sm" onclick="alta('${c.cod}')">✅ Alta</button>
-          <button class="btn btn-sm" style="background:#3a1a2e;color:#ff6b9d;border:1px solid #5a2a4e" onclick="confirmarDespido('${c.cod}')">🚪</button>
+          <button class="btn btn-sm" style="background:#3a1a2e;color:#ff6b9d;border:1px solid #5a2a4e" onclick="confirmarDespido('${c.cod}')">🚪 Despedir</button>
         </div>
       </div>`).join('')}
     </div>`:''}
@@ -994,7 +1410,7 @@ function buildCond() {
         <div><div class="list-cod">${c.cod}</div><div class="list-sub">Desde ${c.bajaDesde||'—'}</div></div>
         <div style="display:flex;gap:6px">
           <button class="btn btn-p btn-sm" onclick="alta('${c.cod}')">✅ Alta</button>
-          <button class="btn btn-sm" style="background:#3a1a2e;color:#ff6b9d;border:1px solid #5a2a4e" onclick="confirmarDespido('${c.cod}')">🚪</button>
+          <button class="btn btn-sm" style="background:#3a1a2e;color:#ff6b9d;border:1px solid #5a2a4e" onclick="confirmarDespido('${c.cod}')">🚪 Despedir</button>
         </div>
       </div>`).join('')}
     </div>`:''}
@@ -1072,94 +1488,119 @@ function confirmarDespido(cod){
 }
 
 function despedirConductor(cod){
-  conductores = conductores.filter(c=>c.cod!==cod);
-  delete tipos[cod];
-  delete rdState[cod];
-  delete notasRuta[cod];
+  conductores=conductores.filter(c=>c.cod!==cod);
+  delete tipos[cod]; delete rdState[cod]; delete notasRuta[cod]; delete ausenciasPuntuales[cod];
   if(planData[cod]) delete planData[cod];
   historial.unshift({fecha:hoyFmt(),cod,tipo:'baja',det:'Conductor eliminado (baja definitiva)'});
   saveLS(); buildCond(); buildDash(); buildRuta();
   toast('🚪 '+cod+' eliminado');
 }
 
+function openAusencia(cod){
+  document.getElementById('aus-cod').value=cod;
+  document.getElementById('aus-cod-title').textContent=cod;
+  document.getElementById('aus-ini').value=mananaISO();
+  document.getElementById('aus-fin').value=mananaISO();
+  document.getElementById('aus-motivo').value='Asuntos personales';
+  openModal('m-ausencia');
+}
+
+function guardarAusencia(){
+  const cod=document.getElementById('aus-cod').value;
+  const motivo=document.getElementById('aus-motivo').value;
+  const ini=document.getElementById('aus-ini').value;
+  const fin=document.getElementById('aus-fin').value;
+  if(!ini||!fin){toast('⚠️ Indica fechas',true);return;}
+  if(fin<ini){toast('⚠️ La fecha fin no puede ser anterior al inicio',true);return;}
+  if(!ausenciasPuntuales[cod]) ausenciasPuntuales[cod]=[];
+  ausenciasPuntuales[cod].push({ini,fin,motivo});
+  historial.unshift({fecha:hoyFmt(),cod,tipo:'nota',det:`Ausencia puntual: ${motivo} (${ini.split('-').reverse().join('/')} → ${fin.split('-').reverse().join('/')})`});
+  closeModal('m-ausencia');
+  saveLS(); buildCond(); buildRuta(); buildDash();
+  toast('📅 Ausencia guardada');
+}
+
+function borrarAusencia(cod,ini){
+  ausenciasPuntuales[cod]=(ausenciasPuntuales[cod]||[]).filter(a=>a.ini!==ini);
+  saveLS(); buildCond(); buildRuta(); buildDash();
+  toast('🗑️ Ausencia eliminada');
+}
+
 // ═══════════════════════════════════════
 // RUTA DEL DIA
 // ═══════════════════════════════════════
+function tieneAusenciaPuntual(cod, fechaISO) {
+  return (ausenciasPuntuales[cod]||[]).some(a => a.ini <= fechaISO && a.fin >= fechaISO);
+}
+
 function buildRuta(){
   const activos=conductores.filter(c=>c.estado==='activo');
-  document.getElementById('rd-count').textContent=activos.length;
+  const fechaRD = document.getElementById('rd-fecha').value || mananaISO();
+  const diaRD = parseInt(fechaRD.split('-')[2], 10);
+
+  const ausPuntuales = activos.filter(c => tieneAusenciaPuntual(c.cod, fechaRD));
+  const activosRuta = activos.filter(c => !tieneAusenciaPuntual(c.cod, fechaRD));
+
+  document.getElementById('rd-count').textContent=activosRuta.length;
 
   const ausentes=conductores.filter(c=>c.estado!=='activo');
   let alertsHtml = ausentes.map(c=>`
     <div class="alert y">${c.estado==='vac'?'🏖️':'🏥'} <strong>${c.cod}</strong> — ${c.estado==='vac'?'vacaciones':'baja médica'}</div>`).join('');
-
+  alertsHtml += ausPuntuales.map(c=>{
+    const aus=(ausenciasPuntuales[c.cod]||[]).find(a=>a.ini<=fechaRD&&a.fin>=fechaRD);
+    return `<div class="alert" style="background:rgba(72,149,239,0.08);border:1px solid rgba(72,149,239,0.25);color:var(--blu)">📅 <strong>${c.cod}</strong> — ${aus.motivo}</div>`;
+  }).join('');
   if(tallerList.length > 0) {
     alertsHtml += tallerList.map(t=>`
       <div class="alert p">🔧 <strong>${t.mat}</strong> — En taller${t.motivo?' ('+t.motivo+')':''}</div>`).join('');
   }
   document.getElementById('rd-alerts').innerHTML = alertsHtml;
 
-  // Obtener el día del mes seleccionado para consultar planData
-  const fechaRD = document.getElementById('rd-fecha').value || mananaISO();
-  const diaRD = parseInt(fechaRD.split('-')[2], 10);
+  const matsOcupadas = new Set();
 
-  document.getElementById('rd-tbody').innerHTML=activos.map(c=>{
+  document.getElementById('rd-tbody').innerHTML=activosRuta.map(c=>{
     const st=rdState[c.cod];
-    // Si hay planificación mensual para ese día, usarla; si no, usar tipos manual
-    const tipoPlan = planData[c.cod] && planData[c.cod][diaRD];
+    const tipoPlan = planData[c.cod] && (planData[c.cod][diaRD] || planData[c.cod][String(diaRD)]);
     const tipo = (tipoPlan === 'CORTA' || tipoPlan === 'LARGA') ? tipoPlan : (tipos[c.cod]||'LARGA');
     const tp=tipo==='CORTA'?'c':'l';
     const enTaller = tallerList.map(t=>t.mat);
     const matsDisp = camiones.filter(m => !enTaller.includes(m));
     const matSelOk = matsDisp.includes(st.matricula);
-
-    // Detectar qué matrículas están ya ocupadas por OTRO conductor
-    const matsOcupadas = new Set(activos.filter(x=>x.cod!==c.cod).map(x=>rdState[x.cod]?.matricula).filter(Boolean));
-    const miMatOcupada = st.matricula && matsOcupadas.has(st.matricula);
+    const matsOcupadasOtros = new Set(activosRuta.filter(x=>x.cod!==c.cod).map(x=>rdState[x.cod]?.matricula).filter(Boolean));
+    const miMatOcupada = st.matricula && matsOcupadasOtros.has(st.matricula);
     const sinMat = !st.matricula;
-
     const matsOrdenadas = matSelOk ? [st.matricula, ...matsDisp.filter(m=>m!==st.matricula)] : matsDisp;
     const matOpts = (matSelOk ? '' : '<option value="">— sin asignar —</option>') +
       matsOrdenadas.map(m=>{
-        const ocupada = matsOcupadas.has(m);
-        const alq = camionesAlquiler.has(m);
-        const label = `${ocupada?'⚠️ ':''}${m}${alq?' (ALQ)':''}${ocupada?' — EN USO':''}`;
-        return `<option value="${m}"${m===st.matricula?' selected':''}>${label}</option>`;
+        const alq=camionesAlquiler.has(m);
+        return `<option value="${m}"${m===st.matricula?' selected':''}>${m}${alq?' (ALQ)':''}</option>`;
       }).join('');
     const rutaOpts=rutas.map(r=>`<option${r===st.ruta?' selected':''}>${r}</option>`).join('');
     const ruta2Opts='<option value="">— ninguna —</option>'+rutas.map(r=>`<option${r===st.ruta2?' selected':''}>${r}</option>`).join('');
-    const tieneRuta2 = !!st.ruta2;
+    const tieneRuta2=!!st.ruta2;
     const ayOpts=['NO','SÍ'].map(a=>`<option${st.ayudante===a?' selected':''}>${a}</option>`).join('');
-    const jsOpts=activos.filter(x=>x.cod!==c.cod).map(x=>`<option${st.ayudanteJS===x.cod?' selected':''}>${x.cod}</option>`).join('');
-    const nota = notasRuta[c.cod] || '';
-    const matEsAlq = camionesAlquiler.has(st.matricula);
-
-    // Color de fila y texto: prioridad ⚠️ amarillo > alquiler rojo
-    const filaStyle = (miMatOcupada || sinMat) ? 'background:rgba(255,190,11,0.08)' : matEsAlq ? 'background:rgba(255,77,109,0.05)' : '';
-    const matStyle = miMatOcupada ? 'color:#ffbe0b;font-weight:700' : sinMat ? '' : matEsAlq ? 'color:var(--red);font-weight:700' : '';
-    const alqBadge = matEsAlq && !sinMat ? '<span style="font-size:9px;background:rgba(255,77,109,0.2);color:var(--red);border-radius:3px;padding:1px 4px;margin-left:4px">ALQ</span>' : '';
+    const jsOpts=activosRuta.filter(x=>x.cod!==c.cod).map(x=>`<option${st.ayudanteJS===x.cod?' selected':''}>${x.cod}</option>`).join('');
+    const matEsAlq=camionesAlquiler.has(st.matricula);
+    const filaStyle=miMatOcupada||sinMat?'background:rgba(255,190,11,0.08)':matEsAlq?'background:rgba(255,77,109,0.05)':'';
+    const matStyle=miMatOcupada?'color:#ffbe0b;font-weight:700':sinMat?'':matEsAlq?'color:var(--red);font-weight:700':'';
+    const alqBadge=matEsAlq&&!sinMat?'<span style="font-size:9px;background:rgba(255,77,109,0.2);color:var(--red);border-radius:3px;padding:1px 4px;margin-left:4px">ALQ</span>':'';
 
     return `<tr${filaStyle?' style="'+filaStyle+'"':''}>
-      <td><span class="ruta-cod">${c.cod}</span>${miMatOcupada?'<span title="Matrícula en uso por otro conductor" style="margin-left:4px;font-size:13px">⚠️</span>':sinMat?'<span title="Sin matrícula asignada" style="margin-left:4px;font-size:13px">⚠️</span>':''}</td>
+      <td><span class="ruta-cod">${c.cod}</span>${miMatOcupada||sinMat?'<span style="margin-left:4px;font-size:13px">⚠️</span>':''}</td>
       <td><span class="tipo-pill ${tp}">${tipo}</span></td>
       <td>
         <select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)">${rutaOpts}</select>
         <div style="display:flex;align-items:center;gap:4px;margin-top:4px">
           <span style="font-size:10px;color:var(--txt2);font-weight:700">+</span>
-          <select class="rd-select" data-cod="${c.cod}" data-f="ruta2" onchange="upRD(this)" style="font-size:11px;${tieneRuta2?'color:var(--grn);font-weight:700':'color:var(--txt2)'}">
-            ${ruta2Opts}
-          </select>
+          <select class="rd-select" data-cod="${c.cod}" data-f="ruta2" onchange="upRD(this)" style="font-size:11px;${tieneRuta2?'color:var(--grn);font-weight:700':'color:var(--txt2)'}">${ruta2Opts}</select>
         </div>
       </td>
-      <td><select class="rd-select" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matStyle}">${matOpts}</select>${alqBadge}</td>
+      <td><select class="rd-select mat-sel" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matStyle}">${matOpts}</select>${alqBadge}</td>
       <td>
         <select class="rd-select" data-cod="${c.cod}" data-f="ayudante" onchange="upRD(this)" style="margin-bottom:4px">${ayOpts}</select>
         <div id="ay-${c.cod}" style="display:${st.ayudante==='SÍ'?'block':'none'}">
           <select class="rd-select" data-cod="${c.cod}" data-f="ayudanteJS" onchange="upRD(this)"><option value="">— elige —</option>${jsOpts}</select>
         </div>
-      </td>
-      <td>
-        <span class="nota-badge" onclick="openNota('${c.cod}')" title="Añadir nota">${nota || '+ nota'}</span>
       </td>
     </tr>`;
   }).join('');
@@ -1171,7 +1612,6 @@ function upRD(el){
   const cod=el.dataset.cod, f=el.dataset.f;
   rdState[cod][f]=el.value;
   if(f==='ayudante'){const d=document.getElementById('ay-'+cod);if(d)d.style.display=el.value==='SÍ'?'block':'none';}
-  // Si cambia matrícula, quitársela a quien la tuviera antes
   if(f==='matricula' && el.value){
     Object.keys(rdState).forEach(otro=>{
       if(otro!==cod && rdState[otro].matricula===el.value) rdState[otro].matricula='';
@@ -1190,15 +1630,16 @@ function copiarTexto(){
   const ciudad=document.getElementById('rd-ciudad').value;
   const [y,m,d]=fecha.split('-');
   const diaCP = parseInt(d, 10);
+  const activosHoy = conductores.filter(c=>c.estado==='activo' && !tieneAusenciaPuntual(c.cod, fecha));
+  const ausPuntCP = conductores.filter(c=>c.estado==='activo' && tieneAusenciaPuntual(c.cod, fecha));
   let txt=`📋 RUTAS ${d}/${m}/${y} — ${ciudad}\n${'─'.repeat(32)}\n`;
-  activos.forEach(c=>{
+  activosHoy.forEach(c=>{
     const st=rdState[c.cod];
-    const tipoPlanCP = planData[c.cod] && planData[c.cod][diaCP];
+    const tipoPlanCP = planData[c.cod] && (planData[c.cod][diaCP] || planData[c.cod][String(diaCP)]);
     const tipo = (tipoPlanCP === 'CORTA' || tipoPlanCP === 'LARGA') ? tipoPlanCP : (tipos[c.cod]||'LARGA');
     const ay=st.ayudante==='SÍ'&&st.ayudanteJS?`+${st.ayudanteJS}`:'';
-    const nota=notasRuta[c.cod]?` [${notasRuta[c.cod]}]`:'';
-    const rutaTxt = st.ruta2 ? `${st.ruta} + ${st.ruta2}` : st.ruta;
-    txt+=`${(c.cod+ay).padEnd(12)} ${rutaTxt.padEnd(22)} ${tipo[0]}  ${st.matricula}${nota}\n`;
+    const rutaTxt=st.ruta2?`${st.ruta} + ${st.ruta2}`:st.ruta;
+    txt+=`${(c.cod+ay).padEnd(12)} ${rutaTxt.padEnd(26)} ${tipo[0]}  ${st.matricula}\n`;
   });
   if(tallerList.length > 0) {
     txt += `\n${'─'.repeat(32)}\nTALLER: ${tallerList.map(t=>t.mat+(t.motivo?' ('+t.motivo+')':'')).join(', ')}\n`;
@@ -1207,6 +1648,9 @@ function copiarTexto(){
   if(ausentes.length > 0){
     txt+=`\nVACAC./BAJA: ${ausentes.map(c=>c.cod.replace('JS','')).join(', ')}\n`;
   }
+  if(ausPuntCP.length > 0){
+    txt+=`\nAUSENCIAS: ${ausPuntCP.map(c=>{const a=(ausenciasPuntuales[c.cod]||[]).find(a=>a.ini<=fecha&&a.fin>=fecha);return c.cod.replace('JS','')+' ('+a.motivo+')'}).join(', ')}\n`;
+  }
   navigator.clipboard.writeText(txt).then(()=>toast('📋 Copiado'));
 }
 
@@ -1214,8 +1658,17 @@ function copiarTexto(){
 // GENERAR IMAGEN (estilo foto)
 // ═══════════════════════════════════════
 function generarImagen(){
-  const activos = conductores.filter(c=>c.estado==='activo');
   const fecha = document.getElementById('rd-fecha').value || mananaISO();
+  const todosActivos = conductores.filter(c=>c.estado==='activo');
+  const activos = todosActivos.filter(c => !tieneAusenciaPuntual(c.cod, fecha));
+  
+  // Alerta si algún conductor activo no tiene matrícula
+  const sinMatricula = activos.filter(c => !rdState[c.cod]?.matricula);
+  if(sinMatricula.length > 0) {
+    const cods = sinMatricula.map(c=>c.cod).join(', ');
+    if(!confirm(`⚠️ Sin matrícula: ${cods}\n\n¿Generar imagen igualmente?`)) return;
+  }
+  const ausPuntImg = todosActivos.filter(c => tieneAusenciaPuntual(c.cod, fecha));
   const ciudad = document.getElementById('rd-ciudad').value;
   const [y,m,d] = fecha.split('-');
   const fechaFmt = `${d}/${m}/${y}`;
@@ -1232,8 +1685,9 @@ function generarImagen(){
   // Secciones extra al final
   let extraLines = 0;
   if(ausentes.length > 0) extraLines += ausentes.length;
+  if(ausPuntImg.length > 0) extraLines += ausPuntImg.length;
   if(hasTaller) extraLines += tallerList.length;
-  const hasExtra = ausentes.length > 0 || hasTaller;
+  const hasExtra = ausentes.length > 0 || hasTaller || ausPuntImg.length > 0;
 
   const H = headerH
     + activos.length * lineH
@@ -1299,17 +1753,11 @@ function generarImagen(){
     ctx.fillStyle = '#222222';
     ctx.font = '15px monospace';
     let rutaStr;
-    if(st.ruta2) {
-      // Abreviar ambas rutas para que quepan: máx 10 chars cada una
-      const r1 = st.ruta.length > 10 ? st.ruta.substring(0,9)+'.' : st.ruta;
-      const r2 = st.ruta2.length > 10 ? st.ruta2.substring(0,9)+'.' : st.ruta2;
-      rutaStr = r1 + ' + ' + r2;
-    } else {
-      rutaStr = st.ruta.length > 17 ? st.ruta.substring(0, 16) + '…' : st.ruta;
-    }
+    if(st.ruta2){const r1=st.ruta.length>10?st.ruta.substring(0,9)+'.':st.ruta;const r2=st.ruta2.length>10?st.ruta2.substring(0,9)+'.':st.ruta2;rutaStr=r1+' + '+r2;}
+    else{rutaStr=st.ruta.length>17?st.ruta.substring(0,16)+'…':st.ruta;}
     ctx.fillText(rutaStr, 100, cy);
 
-    // MATRÍCULA
+    // MATRÍCULA (rojo si alquiler)
     ctx.fillStyle = camionesAlquiler.has(st.matricula) ? '#cc2200' : '#555555';
     ctx.font = 'bold 14px monospace';
     ctx.fillText(st.matricula, 420, cy);
@@ -1335,6 +1783,7 @@ function generarImagen(){
     // Labels en la barra separadora
     let sepLabels = [];
     if(ausentes.length > 0) sepLabels.push('VACACIONES / BAJA MÉDICA');
+    if(ausPuntImg.length > 0) sepLabels.push('AUSENCIAS');
     if(hasTaller) sepLabels.push('TALLER');
     ctx.fillStyle = '#888888';
     ctx.font = 'bold 10px monospace';
@@ -1357,6 +1806,22 @@ function generarImagen(){
       ctx.fillStyle = '#bbbbbb';
       ctx.font = '13px monospace';
       ctx.fillText(cond.estado === 'vac' ? 'VACACIONES' : 'BAJA MÉDICA', 100, cy);
+      extraIdx++;
+    });
+
+    // Ausencias puntuales
+    ausPuntImg.forEach((cond) => {
+      const aus=(ausenciasPuntuales[cond.cod]||[]).find(a=>a.ini<=fecha&&a.fin>=fecha);
+      const y0=sepY+sepH+extraIdx*lineH;
+      ctx.fillStyle=extraIdx%2===0?'#f9f9f9':'#f4f4f4';ctx.fillRect(0,y0,W,lineH);
+      ctx.fillStyle='#dddddd';ctx.fillRect(0,y0+lineH-1,W,1);
+      const cy2=y0+lineH/2+6;
+      ctx.fillStyle='#4895ef';ctx.font='bold 15px monospace';ctx.textAlign='left';
+      ctx.fillText(cond.cod.replace('JS',''),24,cy2);
+      ctx.fillStyle='#6b8cba';ctx.font='13px monospace';
+      const iniF=aus.ini.split('-').reverse().join('/');
+      const finF=aus.fin.split('-').reverse().join('/');
+      ctx.fillText(aus.motivo+(aus.ini===aus.fin?' ('+iniF+')':' ('+iniF+' → '+finF+')'),100,cy2);
       extraIdx++;
     });
 
@@ -1434,8 +1899,7 @@ function buildGestion(){
     return `<div class="list-item">
       <span class="list-cod" style="${esAlq?'color:var(--red)':''}">${m}${esAlq?' <span style="font-size:10px;opacity:0.7">ALQUILER</span>':''}</span>
       <button class="btn btn-r btn-sm" onclick="delCam('${m}')">✕</button>
-    </div>`;
-  }).join('');
+    </div>`;}).join('');
   document.getElementById('rutas-lista').innerHTML=rutas.map(r=>`
     <div class="list-item">
       <span style="font-size:13px;font-weight:600">${r}</span>
@@ -1469,6 +1933,8 @@ function delCam(m){
 function buildCam(){
   const enTaller=tallerList.map(t=>t.mat);
   const disponibles=camiones.filter(m=>!enTaller.includes(m));
+  const countEl=document.getElementById('cam-disp-count');
+  if(countEl) countEl.textContent='('+disponibles.length+')';
   document.getElementById('cam-disp-lista').innerHTML=disponibles.length===0
     ?'<div class="list-item" style="color:var(--txt2);font-size:12px;padding:14px 16px">Sin camiones disponibles</div>'
     :disponibles.map(m=>{
@@ -1479,8 +1945,7 @@ function buildCam(){
           <button class="btn btn-pu btn-sm" onclick="addTallerDirecto('${m}')">🔧 Taller</button>
           <button class="btn btn-r btn-sm" onclick="delCam('${m}')">✕</button>
         </div>
-      </div>`;
-    }).join('');
+      </div>`;}).join('');
   document.getElementById('cam-taller-lista').innerHTML=tallerList.length===0
     ?'<div class="list-item" style="color:var(--txt2);font-size:12px;padding:14px 16px">Ninguno en taller</div>'
     :tallerList.map(t=>`
@@ -1553,7 +2018,7 @@ function buildHist(){
       : (c.cod==='JS228'?dias:Math.floor(10+i%3));
     const lar = dias - cor;
     const pct = Math.round(cor/(cor+lar||1)*100);
-    return `<div class="res-item">
+    return `<div class="res-item" onclick="showCondStats('${c.cod}')" style="cursor:pointer">
       <div class="res-top">
         <span class="res-cod">${c.cod}</span>
         <span style="font-family:monospace;font-size:12px"><span style="color:var(--grn)">C:${cor}</span> / <span style="color:var(--red)">L:${lar}</span></span>
@@ -1562,6 +2027,65 @@ function buildHist(){
       <div class="res-nums"><span style="color:var(--txt2)">${pct}% cortas</span></div>
     </div>`;
   }).join('');
+}
+
+function showCondStats(cod) {
+  const c = conductores.find(x=>x.cod===cod);
+  if(!c) return;
+  document.getElementById('mcs-cod').textContent = cod;
+  const dias = diasLaborables().sort((a,b)=>a-b);
+  const datos = planData[cod] || {};
+  const cortas = Object.values(datos).filter(v=>v==='CORTA'||v==='COMP').length;
+  const largas = Object.values(datos).filter(v=>v==='LARGA').length;
+  const total = cortas + largas || 1;
+  const pct = Math.round(cortas/total*100);
+
+  // Calcular racha actual (hacia atrás desde hoy)
+  let rachaActual = 0, tipoRacha = '';
+  const hoyDia = new Date().getDate();
+  const hoyMesS = new Date().getMonth();
+  const diasPasadosS = dias.filter(d => hoyMesS === 5 ? d <= hoyDia : false);
+  for(let i = diasPasadosS.length - 1; i >= 0; i--) {
+    const v = datos[diasPasadosS[i]] || datos[String(diasPasadosS[i])];
+    if(!v || v === '—') break;
+    const esLarga = v === 'LARGA';
+    const esCorta = v === 'CORTA' || v === 'COMP';
+    if(tipoRacha === '') tipoRacha = esLarga ? 'L' : 'C';
+    if((tipoRacha === 'L' && esLarga) || (tipoRacha === 'C' && esCorta)) rachaActual++;
+    else break;
+  }
+
+  const histCond = historial.filter(h=>h.cod===cod).slice(0,5);
+
+  document.getElementById('mcs-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+      <div style="background:var(--s2);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--brd)">
+        <div style="font-size:24px;font-weight:800;color:var(--grn)">${cortas}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:2px">CORTAS</div>
+      </div>
+      <div style="background:var(--s2);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--brd)">
+        <div style="font-size:24px;font-weight:800;color:var(--red)">${largas}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:2px">LARGAS</div>
+      </div>
+      <div style="background:var(--s2);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--brd)">
+        <div style="font-size:24px;font-weight:800;color:var(--blu)">${pct}%</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:2px">CORTAS</div>
+      </div>
+    </div>
+    ${rachaActual>0?`<div class="alert ${tipoRacha==='L'?'r':'g'}" style="margin-bottom:12px">⚡ Racha actual: <strong>${rachaActual} ${tipoRacha==='L'?'LARGAS':'CORTAS'} seguidas</strong></div>`:''}
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Progreso mes</div>
+      <div style="height:10px;background:var(--s2);border-radius:5px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--grn);border-radius:5px"></div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Matrícula habitual</div>
+    <div style="font-family:monospace;font-size:15px;font-weight:700;color:var(--txt);margin-bottom:14px">${c.mat||'—'}</div>
+    ${histCond.length>0?`
+    <div style="font-size:10px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Últimos registros</div>
+    ${histCond.map(h=>`<div style="font-size:12px;color:var(--txt2);padding:5px 0;border-bottom:1px solid rgba(30,45,69,0.4)">${h.fecha} — ${h.det}</div>`).join('')}`:''}
+  `;
+  openModal('m-cond-stats');
 }
 
 function borrarHistConfirmado() {
@@ -1622,9 +2146,60 @@ setInterval(tick,1000);tick();
 // INIT
 // ═══════════════════════════════════════
 loadLS();
-// Fecha siempre mañana al abrir
 document.getElementById('rd-fecha').value = mananaISO();
 buildDash();
+
+const WELCOME_KEY = 'gestorrutas-welcome-v6';
+if(!localStorage.getItem(WELCOME_KEY)){
+  setTimeout(()=>openModal('m-welcome'), 800);
+  localStorage.setItem(WELCOME_KEY,'1');
+}
 </script>
+
+<div class="modal-ov" id="m-welcome">
+  <div class="modal" style="padding:28px 22px;max-height:85vh;overflow-y:auto">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:44px;margin-bottom:10px">🚛</div>
+      <div style="font-size:20px;font-weight:800;color:var(--txt)">GestorRutas Pro</div>
+      <div style="font-size:11px;color:var(--txt2);margin-top:4px;letter-spacing:1px;font-weight:600">TODAS LAS NOVEDADES</div>
+    </div>
+
+    <div style="margin-bottom:6px">
+      <div style="font-size:10px;color:var(--grn);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(0,214,143,0.2)">🆕 Últimas mejoras</div>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px">
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Planificación semanal</strong> — vista semana actual por defecto con flechas ‹ › para navegar y botón para ver el mes completo</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Alerta fin de mes</strong> — cuando quedan ≤10 días laborables, el dashboard avisa si hay desequilibrio de largas/cortas entre conductores</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Alertas vacaciones</strong> — avisos ampliados a 3 días para salida y vuelta</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Estadísticas conductor</strong> — botón 📊 Stats en cada conductor; toca su nombre en planificación o historial para ver cortas, largas, racha e historial del mes</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Matrícula más legible</strong> — selector limpio, sin texto "EN USO"; el ⚠️ solo aparece en el conductor que se queda sin camión</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Alerta foto sin matrícula</strong> — aviso antes de exportar si algún conductor activo no tiene camión asignado</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Botón Despedir</strong> — ahora muestra el texto "🚪 Despedir" en lugar de solo el icono</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Pestaña Ayuda</strong> — tutorial completo explicando cada sección de la app</span></li>
+      </ul>
+    </div>
+
+    <div style="margin-top:16px;margin-bottom:6px">
+      <div style="font-size:10px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--brd)">📦 Versiones anteriores</div>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px">
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">Dashboard mejorado con progreso del mes, ranking de largas y estado de flota</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">Rutas dobles — asigna dos rutas a un mismo conductor en la misma fila</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">Ausencias puntuales con fecha inicio y fin, aparecen en la imagen exportada</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">Camiones de alquiler marcados en rojo en toda la app</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">Matrícula única por conductor — al asignarla a otro, el primero la pierde con aviso ⚠️</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">Planificación mensual sincronizada con la ruta del día</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">JS228 editable manualmente en la planificación</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">Pantalla de camiones independiente con gestión de taller integrada</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">Notas por conductor en la ruta del día — aparecen en la imagen exportada</span></li>
+        <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--txt2);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt2);line-height:1.4">Historial con filtros por tipo (vacaciones, baja, taller, notas, alta)</span></li>
+      </ul>
+    </div>
+
+    <div style="text-align:center;margin:20px 0 8px">
+      <div style="font-size:12px;color:var(--txt2)">Espero que te guste 😊</div>
+    </div>
+    <button class="btn btn-p btn-full" onclick="closeModal('m-welcome')" style="margin-bottom:14px">¡Vamos! 🚀</button>
+    <div style="text-align:center;font-size:10px;color:var(--txt2);letter-spacing:1.5px;font-weight:600">GESTORRUTAS PRO · by Mario</div>
+  </div>
+</div>
 </body>
 </html>
