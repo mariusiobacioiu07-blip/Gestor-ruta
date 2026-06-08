@@ -91,18 +91,18 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
 .alert.g{background:rgba(0,214,143,0.08);border:1px solid rgba(0,214,143,0.25);color:var(--grn);}
 .alert.p{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);color:var(--pur);}
 
-.ruta-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.ruta-table{border-collapse:collapse;min-width:480px;width:100%;}
-.ruta-table th{padding:7px 4px;background:var(--s2);font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-bottom:1px solid var(--brd);text-align:left;white-space:nowrap;}
-.ruta-table td{padding:4px 3px;border-bottom:1px solid rgba(30,45,69,0.5);vertical-align:middle;}
+.ruta-wrap{overflow-x:hidden;}
+.ruta-table{border-collapse:collapse;width:100%;table-layout:fixed;}
+.ruta-table th{padding:5px 2px;background:var(--s2);font-size:8px;color:var(--txt2);text-transform:uppercase;letter-spacing:0px;font-weight:600;border-bottom:1px solid var(--brd);text-align:left;white-space:nowrap;overflow:hidden;}
+.ruta-table td{padding:3px 2px;border-bottom:1px solid rgba(30,45,69,0.5);vertical-align:middle;overflow:hidden;}
 .ruta-table tr:last-child td{border-bottom:none;}
-.ruta-cod{color:var(--grn);font-weight:800;font-family:monospace;font-size:12px;}
-.tipo-pill{display:inline-block;padding:3px 5px;border-radius:5px;font-size:10px;font-weight:700;min-width:40px;text-align:center;}
+.ruta-cod{color:var(--grn);font-weight:800;font-family:monospace;font-size:11px;}
+.tipo-pill{display:inline-block;padding:2px 4px;border-radius:5px;font-size:9px;font-weight:700;min-width:18px;text-align:center;}
 .tipo-pill.c{background:rgba(0,214,143,0.15);color:var(--grn);}
 .tipo-pill.l{background:rgba(255,77,109,0.15);color:var(--red);}
-.rd-select{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:5px 4px;border-radius:6px;font-size:12px;font-family:inherit;width:100%;min-width:90px;}
+.rd-select{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:4px 2px;border-radius:6px;font-size:11px;font-family:inherit;width:100%;min-width:0;}
 .rd-select:focus{outline:none;border-color:var(--grn);}
-.rd-select.mat-sel{font-size:13px;font-weight:700;letter-spacing:0.3px;min-width:105px;}
+.rd-select.mat-sel{font-size:11px;font-weight:700;letter-spacing:0px;min-width:0;}
 .rd-input{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:4px 6px;border-radius:6px;font-size:11px;font-family:inherit;width:100%;min-width:70px;}
 .rd-input:focus{outline:none;border-color:var(--grn);}
 .rd-input::placeholder{color:var(--txt2);}
@@ -163,6 +163,25 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
 .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
 .filter-btn{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid var(--brd);background:var(--s2);color:var(--txt2);cursor:pointer;font-family:inherit;}
 .filter-btn.on{background:rgba(0,214,143,0.12);color:var(--grn);border-color:var(--grn);}
+
+/* RUTA CARDS */
+.rd-card{background:var(--s1);border:1px solid var(--brd);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.15s;}
+.rd-card.warn{border-color:rgba(255,190,11,0.5);background:rgba(255,190,11,0.03);}
+.rd-card.alq{border-color:rgba(255,77,109,0.3);}
+.rd-card-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--brd);}
+.rd-card-cod{font-family:monospace;font-size:17px;font-weight:800;color:var(--grn);}
+.rd-tipo-pill{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:0.5px;}
+.rd-tipo-pill.c{background:rgba(0,214,143,0.15);color:var(--grn);border:1px solid rgba(0,214,143,0.3);}
+.rd-tipo-pill.l{background:rgba(255,77,109,0.15);color:var(--red);border:1px solid rgba(255,77,109,0.3);}
+.rd-card-body{padding:11px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.rd-field{display:flex;flex-direction:column;gap:4px;}
+.rd-field-full{grid-column:1/-1;}
+.rd-field-label{font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
+.rd-sel{background:var(--s2);border:1px solid var(--brd);color:var(--txt);padding:9px 10px;border-radius:8px;font-size:13px;font-family:inherit;width:100%;font-weight:600;}
+.rd-sel:focus{outline:none;border-color:var(--grn);}
+.rd-sel.alq-sel{color:var(--red);}
+.rd-nota-btn{background:rgba(72,149,239,0.1);border:1px solid rgba(72,149,239,0.25);color:var(--blu);padding:8px 10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rd-export{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;margin-bottom:4px;}
 </style>
 </head>
 <body>
@@ -226,9 +245,13 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
         </select>
       </div>
     </div>
-    <div style="padding:0 14px 12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="padding:0 14px 6px;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:12px;color:var(--txt2)">Conductores disponibles:</span>
       <span id="rd-count" style="font-size:22px;font-weight:800;color:var(--grn)">—</span>
+    </div>
+    <div style="padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="btn btn-full" style="background:#1a4a8a;color:#ffffff;border:none" onclick="generarImagen('mesur')">🏢 Exportar Mesur</button>
+      <button class="btn btn-p btn-full" onclick="generarImagen('conductores')">🚛 Exportar Conductores</button>
     </div>
   </div>
 
@@ -237,17 +260,16 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   <div class="card">
     <div class="card-head">
       <span>Asignación de rutas</span>
-      <span style="font-size:10px;color:var(--txt2)">desliza →</span>
     </div>
     <div class="ruta-wrap">
       <table class="ruta-table">
         <thead>
           <tr>
-            <th>COD.</th>
-            <th>TIPO</th>
-            <th>RUTA / DESTINO</th>
-            <th>MATRÍCULA</th>
-            <th>AYUDANTE</th>
+            <th style="width:16%">COD.</th>
+            <th style="width:8%"></th>
+            <th style="width:34%">RUTA</th>
+            <th style="width:24%">MATRÍC.</th>
+            <th style="width:18%">AYUD.</th>
           </tr>
         </thead>
         <tbody id="rd-tbody"></tbody>
@@ -255,18 +277,12 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     </div>
   </div>
 
-  <!-- Sección camiones en taller -->
   <div class="card">
     <div class="card-head">
       <span>🔧 Camiones en Taller</span>
       <button class="btn btn-pu btn-sm" onclick="openModal('m-add-taller')">+ Añadir</button>
     </div>
     <div id="taller-lista"></div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
-    <button class="btn btn-s btn-full" onclick="copiarTexto()">📋 Copiar texto</button>
-    <button class="btn btn-p btn-full" onclick="generarImagen()">📸 Generar imagen</button>
   </div>
 </div>
 
@@ -445,7 +461,7 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
       </div>
       <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--grn)">
         <div style="font-size:11px;font-weight:700;color:var(--grn);margin-bottom:4px">Exportar:</div>
-        <div style="color:var(--txt2);font-size:12px">📋 <strong>Copiar texto</strong> — Copia la lista en formato texto para pegar en WhatsApp.<br>📸 <strong>Generar imagen</strong> — Crea una imagen tipo pizarra para mandar al grupo. Si algún conductor no tiene matrícula, avisa antes de exportar.</div>
+        <div style="color:var(--txt2);font-size:12px">🏢 <strong>Exportar Mesur</strong> — Genera imagen con solo conductores, ruta y matrícula (sin bajas ni taller).<br>🚛 <strong>Exportar Conductores</strong> — Genera imagen completa con taller, vacaciones, bajas y ausencias. Si algún conductor no tiene matrícula, avisa antes de exportar.</div>
       </div>
       <div style="background:var(--s2);border-radius:8px;padding:10px 12px;border-left:3px solid var(--pur)">
         <div style="font-size:11px;font-weight:700;color:var(--pur);margin-bottom:4px">Camiones en Taller:</div>
@@ -734,6 +750,31 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   </div>
 </div>
 
+<!-- Modal elegir versión imagen -->
+<div class="modal-ov" id="m-export-elegir">
+  <div class="modal" style="padding:24px">
+    <div class="modal-title">📸 <em>Generar imagen</em></div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:18px;line-height:1.5">Elige qué versión quieres compartir:</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-p btn-full" style="padding:16px;font-size:14px;justify-content:flex-start;gap:12px" onclick="closeModal('m-export-elegir');generarImagen('conductores')">
+        <span style="font-size:22px">🚛</span>
+        <div style="text-align:left">
+          <div style="font-weight:800">Para Conductores</div>
+          <div style="font-size:11px;opacity:0.8;font-weight:500">Rutas + taller + bajas + vacaciones</div>
+        </div>
+      </button>
+      <button class="btn btn-s btn-full" style="padding:16px;font-size:14px;justify-content:flex-start;gap:12px" onclick="closeModal('m-export-elegir');generarImagen('mesur')">
+        <span style="font-size:22px">🏢</span>
+        <div style="text-align:left">
+          <div style="font-weight:800">Para Mesur</div>
+          <div style="font-size:11px;opacity:0.8;font-weight:500">Solo rutas + matrícula (sin bajas ni taller)</div>
+        </div>
+      </button>
+    </div>
+    <button class="btn btn-s btn-full" style="margin-top:14px" onclick="closeModal('m-export-elegir')">Cancelar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast-el"></div>
 
 <script>
@@ -995,20 +1036,23 @@ function buildDash() {
     </div>
     <div style="border-top:1px solid var(--brd);padding:14px 16px">
       <div style="font-size:11px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">🏆 Más largas este mes</div>
-      ${ranking.map((r,i)=>{
-        const medals=['🥇','🥈','🥉'];
-        const total=(r.largas+r.cortas)||1;
-        const pctL=Math.round(r.largas/total*100);
-        return `<div style="margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <span style="font-family:monospace;font-weight:800;color:var(--txt);font-size:13px">${medals[i]} ${r.cod}</span>
-            <span style="font-size:11px"><span style="color:var(--red);font-weight:700">${r.largas}L</span> · <span style="color:var(--grn);font-weight:700">${r.cortas}C</span></span>
-          </div>
-          <div style="height:5px;background:var(--s3);border-radius:3px;overflow:hidden">
-            <div style="height:100%;width:${pctL}%;background:var(--red);border-radius:3px"></div>
-          </div>
-        </div>`;
-      }).join('')}
+      ${!planGenerado || ranking.every(r=>r.largas===0&&r.cortas===0)
+        ? `<div style="font-size:12px;color:var(--txt2);padding:6px 0">Ve a <strong style="color:var(--grn)">Planificación</strong> para generar el reparto del mes y ver el ranking aquí.</div>`
+        : ranking.map((r,i)=>{
+          const medals=['🥇','🥈','🥉'];
+          const total=(r.largas+r.cortas)||1;
+          const pctL=Math.round(r.largas/total*100);
+          return `<div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-family:monospace;font-weight:800;color:var(--txt);font-size:13px">${medals[i]} ${r.cod}</span>
+              <span style="font-size:11px"><span style="color:var(--red);font-weight:700">${r.largas}L</span> · <span style="color:var(--grn);font-weight:700">${r.cortas}C</span></span>
+            </div>
+            <div style="height:5px;background:var(--s3);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${pctL}%;background:var(--red);border-radius:3px"></div>
+            </div>
+          </div>`;
+        }).join('')
+      }
     </div>
     <div style="border-top:1px solid var(--brd);padding:14px 16px">
       <div style="font-size:11px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🚛 Estado flota</div>
@@ -1274,54 +1318,50 @@ function renderPlan() {
   } else { avisoEl.style.display='none'; }
 
   let html = '<thead><tr>';
-  html += '<th style="position:sticky;left:0;background:#1a2235;z-index:2;padding:8px 10px;font-size:10px;color:#64748b;text-align:left;border-bottom:1px solid #1e2d45;border-right:1px solid #1e2d45">COD.</th>';
+  html += '<th style="position:sticky;left:0;background:#1a2235;z-index:2;padding:10px 10px;font-size:11px;color:#64748b;text-align:left;border-bottom:1px solid #1e2d45;border-right:1px solid #1e2d45">COD.</th>';
   dias.forEach(d => {
     const isHoy = d===hoyDia && hoyMes===5;
-    html += `<th style="padding:7px 4px;text-align:center;min-width:46px;font-size:10px;font-weight:600;${isHoy?'color:#ffbe0b;background:rgba(255,190,11,0.08);':'color:#64748b;'}border-bottom:1px solid #1e2d45;border-right:1px solid #1e2d45">
-      ${String(d).padStart(2,'0')}${isHoy?'<br><span style="font-size:8px;background:#ffbe0b;color:#0a0f1a;border-radius:2px;padding:0 3px">HOY</span>':''}
+    html += `<th style="padding:8px 2px;text-align:center;min-width:48px;font-size:11px;font-weight:700;${isHoy?'color:#ffbe0b;background:rgba(255,190,11,0.10);':'color:#8899aa;'}border-bottom:1px solid #1e2d45;border-right:1px solid #1e2d45">
+      ${String(d).padStart(2,'0')}${isHoy?'<br><span style="font-size:9px;background:#ffbe0b;color:#0a0f1a;border-radius:3px;padding:1px 4px;font-weight:800">HOY</span>':''}
     </th>`;
   });
-  html += '<th style="padding:8px 6px;text-align:center;font-size:10px;color:#00d68f;border-bottom:1px solid #1e2d45">C</th>';
-  html += '<th style="padding:8px 6px;text-align:center;font-size:10px;color:#ff4d6d;border-bottom:1px solid #1e2d45">L</th>';
+  html += '<th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:700;color:#00d68f;border-bottom:1px solid #1e2d45;min-width:30px">C</th>';
+  html += '<th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:700;color:#ff4d6d;border-bottom:1px solid #1e2d45;min-width:30px">L</th>';
   html += '</tr>';
   html += '<tr>';
-  html += '<td style="position:sticky;left:0;background:#0d1a2e;z-index:2;padding:5px 10px;font-size:9px;color:#4895ef;font-weight:700;border-bottom:2px solid #1e2d45;border-right:1px solid #1e2d45;white-space:nowrap">✏️ CORTAS</td>';
+  html += '<td style="position:sticky;left:0;background:#0d1a2e;z-index:2;padding:6px 10px;font-size:10px;color:#4895ef;font-weight:700;border-bottom:2px solid #1e2d45;border-right:1px solid #1e2d45;white-space:nowrap">✏️ CORTAS</td>';
   dias.forEach(d => {
     const val = cortasDia[d] ?? DEFAULT_CORTAS;
-    html += `<td style="text-align:center;background:#0d1a2e;border-bottom:2px solid #1e2d45;border-right:1px solid rgba(30,45,69,0.3);padding:3px 2px">
-      <span onclick="editCortasDia(${d})" style="display:inline-block;min-width:26px;padding:2px 5px;background:rgba(72,149,239,0.15);color:#4895ef;border-radius:4px;font-size:11px;font-weight:800;cursor:pointer;font-family:monospace">${val}</span>
+    html += `<td style="text-align:center;background:#0d1a2e;border-bottom:2px solid #1e2d45;border-right:1px solid rgba(30,45,69,0.3);padding:4px 2px">
+      <span onclick="editCortasDia(${d})" style="display:inline-block;min-width:30px;padding:3px 6px;background:rgba(72,149,239,0.2);color:#4895ef;border-radius:5px;font-size:13px;font-weight:800;cursor:pointer;font-family:monospace">${val}</span>
     </td>`;
   });
   html += '<td style="background:#0d1a2e;border-bottom:2px solid #1e2d45"></td><td style="background:#0d1a2e;border-bottom:2px solid #1e2d45"></td>';
   html += '</tr></thead><tbody>';
-  activos.forEach(c => {
+  activos.forEach((c, rowIdx) => {
     const cortas = cortasTotales[c.cod]||0;
     const comp = Object.values(planData[c.cod]||{}).filter(v=>v==='COMP').length;
-    const largas = dias.length - cortas - comp;
+    const largas = diasTodos.length - cortas;
+    const rowBg = rowIdx % 2 === 0 ? '#111827' : '#0e1520';
     html += '<tr>';
-    html += `<td style="position:sticky;left:0;background:#111827;z-index:1;padding:6px 10px;font-family:monospace;font-weight:700;font-size:12px;color:#00d68f;border-bottom:1px solid rgba(30,45,69,0.5);border-right:1px solid #1e2d45;cursor:pointer" onclick="showCondStats('${c.cod}')">${c.cod}</td>`;
+    html += `<td style="position:sticky;left:0;background:${rowBg};z-index:1;padding:8px 10px;font-family:monospace;font-weight:700;font-size:13px;color:#00d68f;border-bottom:1px solid rgba(30,45,69,0.5);border-right:1px solid #1e2d45;cursor:pointer" onclick="showCondStats('${c.cod}')">${c.cod}</td>`;
     dias.forEach(d => {
       const val = (planData[c.cod]||{})[d] || '—';
       const isC = val==='CORTA';
       const isComp = val==='COMP';
-      const isL = val==='LARGA';
       let pill;
       if(val==='—') {
-        pill = '<span style="font-size:10px;color:#64748b">—</span>';
-      } else if(isComp) {
-        pill = `<span onclick="showCompInfo('${c.cod}',${d})" title="Ruta compartida — toca para info" style="display:inline-block;padding:3px 4px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;min-width:28px;text-align:center;background:rgba(255,190,11,0.18);color:#ffbe0b">CO</span>`;
+        pill = '<span style="font-size:11px;color:#64748b">—</span>';
       } else {
-        pill = `<span onclick="toggleCelda('${c.cod}',${d})" style="display:inline-block;padding:3px 4px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;min-width:28px;text-align:center;background:${isC?'rgba(0,214,143,0.15)':'rgba(255,77,109,0.15)'};color:${isC?'#00d68f':'#ff4d6d'}">${isC?'C':'L'}</span>`;
+        const bg = isC ? 'rgba(0,214,143,0.18)' : isComp ? 'rgba(255,190,11,0.18)' : 'rgba(255,77,109,0.18)';
+        const color = isC ? '#00d68f' : isComp ? '#ffbe0b' : '#ff4d6d';
+        const label = isC ? 'C' : isComp ? 'CO' : 'L';
+        pill = `<span onclick="toggleCelda('${c.cod}',${d})" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;background:${bg};color:${color}">${label}</span>`;
       }
-      // If COMP, tapping the cell also needs to continue the cycle
-      if(isComp) {
-        // wrap in a div that also handles toggle on long press or double click
-        pill = `<span onclick="toggleCelda('${c.cod}',${d})" title="COMP: compartida — toca para cambiar" style="display:inline-block;padding:3px 4px;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;min-width:28px;text-align:center;background:rgba(255,190,11,0.18);color:#ffbe0b">CO</span>`;
-      }
-      html += `<td style="padding:4px 2px;text-align:center;border-bottom:1px solid rgba(30,45,69,0.4);border-right:1px solid rgba(30,45,69,0.3)">${pill}</td>`;
+      html += `<td style="padding:4px 2px;text-align:center;border-bottom:1px solid rgba(30,45,69,0.4);border-right:1px solid rgba(30,45,69,0.3);background:${rowBg}">${pill}</td>`;
     });
-    html += `<td style="text-align:center;font-family:monospace;font-weight:700;font-size:12px;color:#00d68f;padding:6px 4px;background:rgba(0,214,143,0.04)">${cortas}${comp?'<span style="color:#ffbe0b;font-size:9px">+'+comp+'</span>':''}</td>`;
-    html += `<td style="text-align:center;font-family:monospace;font-weight:700;font-size:12px;color:#ff4d6d;padding:6px 4px;background:rgba(255,77,109,0.04)">${largas}</td>`;
+    html += `<td style="text-align:center;font-family:monospace;font-weight:800;font-size:13px;color:#00d68f;padding:8px 4px;background:rgba(0,214,143,0.05)">${cortas}${comp?`<span style="color:#ffbe0b;font-size:9px;display:block">+${comp}co</span>`:''}&#8203;</td>`;
+    html += `<td style="text-align:center;font-family:monospace;font-weight:800;font-size:13px;color:#ff4d6d;padding:8px 4px;background:rgba(255,77,109,0.05)">${largas}</td>`;
     html += '</tr>';
   });
   html += '</tbody>';
@@ -1563,6 +1603,7 @@ function buildRuta(){
     const tipoPlan = planData[c.cod] && (planData[c.cod][diaRD] || planData[c.cod][String(diaRD)]);
     const tipo = (tipoPlan === 'CORTA' || tipoPlan === 'LARGA') ? tipoPlan : (tipos[c.cod]||'LARGA');
     const tp=tipo==='CORTA'?'c':'l';
+    const letra=tipo==='CORTA'?'C':'L';
     const enTaller = tallerList.map(t=>t.mat);
     const matsDisp = camiones.filter(m => !enTaller.includes(m));
     const matSelOk = matsDisp.includes(st.matricula);
@@ -1570,36 +1611,41 @@ function buildRuta(){
     const miMatOcupada = st.matricula && matsOcupadasOtros.has(st.matricula);
     const sinMat = !st.matricula;
     const matsOrdenadas = matSelOk ? [st.matricula, ...matsDisp.filter(m=>m!==st.matricula)] : matsDisp;
-    const matOpts = (matSelOk ? '' : '<option value="">— sin asignar —</option>') +
+    const matOpts = (matSelOk ? '' : '<option value="">— sin mat. —</option>') +
       matsOrdenadas.map(m=>{
         const alq=camionesAlquiler.has(m);
-        return `<option value="${m}"${m===st.matricula?' selected':''}>${m}${alq?' (ALQ)':''}</option>`;
+        return `<option value="${m}"${m===st.matricula?' selected':''}>${m}${alq?' ★':''}</option>`;
       }).join('');
     const rutaOpts=rutas.map(r=>`<option${r===st.ruta?' selected':''}>${r}</option>`).join('');
-    const ruta2Opts='<option value="">— ninguna —</option>'+rutas.map(r=>`<option${r===st.ruta2?' selected':''}>${r}</option>`).join('');
+    const ruta2Opts='<option value="">+2ª ruta</option>'+rutas.map(r=>`<option${r===st.ruta2?' selected':''}>${r}</option>`).join('');
     const tieneRuta2=!!st.ruta2;
     const ayOpts=['NO','SÍ'].map(a=>`<option${st.ayudante===a?' selected':''}>${a}</option>`).join('');
     const jsOpts=activosRuta.filter(x=>x.cod!==c.cod).map(x=>`<option${st.ayudanteJS===x.cod?' selected':''}>${x.cod}</option>`).join('');
     const matEsAlq=camionesAlquiler.has(st.matricula);
-    const filaStyle=miMatOcupada||sinMat?'background:rgba(255,190,11,0.08)':matEsAlq?'background:rgba(255,77,109,0.05)':'';
+    const filaStyle=miMatOcupada||sinMat?'background:rgba(255,190,11,0.07)':matEsAlq?'background:rgba(255,77,109,0.04)':'';
     const matStyle=miMatOcupada?'color:#ffbe0b;font-weight:700':sinMat?'':matEsAlq?'color:var(--red);font-weight:700':'';
-    const alqBadge=matEsAlq&&!sinMat?'<span style="font-size:9px;background:rgba(255,77,109,0.2);color:var(--red);border-radius:3px;padding:1px 4px;margin-left:4px">ALQ</span>':'';
+    const nota=notasRuta[c.cod]||'';
 
     return `<tr${filaStyle?' style="'+filaStyle+'"':''}>
-      <td><span class="ruta-cod">${c.cod}</span>${miMatOcupada||sinMat?'<span style="margin-left:4px;font-size:13px">⚠️</span>':''}</td>
-      <td><span class="tipo-pill ${tp}">${tipo}</span></td>
-      <td>
-        <select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)">${rutaOpts}</select>
-        <div style="display:flex;align-items:center;gap:4px;margin-top:4px">
-          <span style="font-size:10px;color:var(--txt2);font-weight:700">+</span>
-          <select class="rd-select" data-cod="${c.cod}" data-f="ruta2" onchange="upRD(this)" style="font-size:11px;${tieneRuta2?'color:var(--grn);font-weight:700':'color:var(--txt2)'}">${ruta2Opts}</select>
-        </div>
+      <td style="padding:6px 2px 6px 6px;white-space:nowrap">
+        <span class="ruta-cod" style="font-size:11px">${c.cod}</span>
+        ${miMatOcupada||sinMat?'<span style="font-size:10px">⚠️</span>':''}
       </td>
-      <td><select class="rd-select mat-sel" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matStyle}">${matOpts}</select>${alqBadge}</td>
-      <td>
-        <select class="rd-select" data-cod="${c.cod}" data-f="ayudante" onchange="upRD(this)" style="margin-bottom:4px">${ayOpts}</select>
+      <td style="padding:6px 2px">
+        <span class="tipo-pill ${tp}" style="font-size:9px;padding:2px 4px">${letra}</span>
+      </td>
+      <td style="padding:6px 2px">
+        <select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)" style="margin-bottom:2px;font-size:10px">${rutaOpts}</select>
+        <select class="rd-select" data-cod="${c.cod}" data-f="ruta2" onchange="upRD(this)" style="font-size:10px;${tieneRuta2?'color:var(--grn);font-weight:700;border-color:rgba(0,214,143,0.4)':'color:var(--txt2)'}">${ruta2Opts}</select>
+      </td>
+      <td style="padding:6px 2px">
+        <select class="rd-select mat-sel" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matStyle};font-size:10px">${matOpts}</select>
+        ${matEsAlq&&!sinMat?'<div style="font-size:8px;color:var(--red);font-weight:700;text-align:center">ALQ</div>':''}
+      </td>
+      <td style="padding:6px 2px">
+        <select class="rd-select" data-cod="${c.cod}" data-f="ayudante" onchange="upRD(this)" style="margin-bottom:2px;font-size:10px">${ayOpts}</select>
         <div id="ay-${c.cod}" style="display:${st.ayudante==='SÍ'?'block':'none'}">
-          <select class="rd-select" data-cod="${c.cod}" data-f="ayudanteJS" onchange="upRD(this)"><option value="">— elige —</option>${jsOpts}</select>
+          <select class="rd-select" data-cod="${c.cod}" data-f="ayudanteJS" onchange="upRD(this)" style="font-size:10px"><option value="">— JS —</option>${jsOpts}</select>
         </div>
       </td>
     </tr>`;
@@ -1657,46 +1703,53 @@ function copiarTexto(){
 // ═══════════════════════════════════════
 // GENERAR IMAGEN (estilo foto)
 // ═══════════════════════════════════════
-function generarImagen(){
+function generarImagen(modo){
+  // modo: 'conductores' (todo) | 'mesur' (solo rutas)
+  if(!modo) modo = 'conductores';
   const fecha = document.getElementById('rd-fecha').value || mananaISO();
   const todosActivos = conductores.filter(c=>c.estado==='activo');
   const activos = todosActivos.filter(c => !tieneAusenciaPuntual(c.cod, fecha));
-  
+
   // Alerta si algún conductor activo no tiene matrícula
   const sinMatricula = activos.filter(c => !rdState[c.cod]?.matricula);
   if(sinMatricula.length > 0) {
     const cods = sinMatricula.map(c=>c.cod).join(', ');
     if(!confirm(`⚠️ Sin matrícula: ${cods}\n\n¿Generar imagen igualmente?`)) return;
   }
+
   const ausPuntImg = todosActivos.filter(c => tieneAusenciaPuntual(c.cod, fecha));
   const ciudad = document.getElementById('rd-ciudad').value;
   const [y,m,d] = fecha.split('-');
   const fechaFmt = `${d}/${m}/${y}`;
   const ausentes = conductores.filter(c=>c.estado!=='activo');
-  const conNotas = activos.filter(c=>notasRuta[c.cod]);
   const hasTaller = tallerList.length > 0;
+
+  // Para Mesur: sin sección extra
+  const mostrarExtra = modo === 'conductores' && (ausentes.length > 0 || hasTaller || ausPuntImg.length > 0);
 
   const W = 620;
   const lineH = 46;
   const headerH = 90;
-  const footerH = 50;
+  const footerH = 0;
   const sepH = 28;
 
-  // Secciones extra al final
   let extraLines = 0;
-  if(ausentes.length > 0) extraLines += ausentes.length;
-  if(ausPuntImg.length > 0) extraLines += ausPuntImg.length;
-  if(hasTaller) extraLines += tallerList.length;
-  const hasExtra = ausentes.length > 0 || hasTaller || ausPuntImg.length > 0;
+  if(mostrarExtra) {
+    if(ausentes.length > 0) extraLines += ausentes.length;
+    if(ausPuntImg.length > 0) extraLines += ausPuntImg.length;
+    if(hasTaller) extraLines += tallerList.length;
+  }
 
   const H = headerH
     + activos.length * lineH
-    + (hasExtra ? sepH + extraLines * lineH : 0)
+    + (mostrarExtra ? sepH + extraLines * lineH : 0)
     + footerH;
 
+  const SCALE = 3; // Alta resolución: 3x
   const cv = document.createElement('canvas');
-  cv.width = W; cv.height = H;
+  cv.width = W * SCALE; cv.height = H * SCALE;
   const ctx = cv.getContext('2d');
+  ctx.scale(SCALE, SCALE);
 
   // Fondo blanco
   ctx.fillStyle = '#ffffff';
@@ -1714,7 +1767,7 @@ function generarImagen(){
   ctx.textAlign = 'left';
   ctx.fillText(fechaFmt, 24, 50);
 
-  // Ciudad
+  // Ciudad + etiqueta versión
   ctx.fillStyle = '#444444';
   ctx.font = 'bold 18px monospace';
   ctx.textAlign = 'right';
@@ -1749,7 +1802,7 @@ function generarImagen(){
     ctx.textAlign = 'left';
     ctx.fillText(codTxt, 24, cy);
 
-    // RUTA (simple o doble)
+    // RUTA
     ctx.fillStyle = '#222222';
     ctx.font = '15px monospace';
     let rutaStr;
@@ -1757,13 +1810,13 @@ function generarImagen(){
     else{rutaStr=st.ruta.length>17?st.ruta.substring(0,16)+'…':st.ruta;}
     ctx.fillText(rutaStr, 100, cy);
 
-    // MATRÍCULA (rojo si alquiler)
+    // MATRÍCULA
     ctx.fillStyle = camionesAlquiler.has(st.matricula) ? '#cc2200' : '#555555';
     ctx.font = 'bold 14px monospace';
     ctx.fillText(st.matricula, 420, cy);
 
-    // NOTA si existe — pequeña, gris azulado
-    if(nota) {
+    // NOTA (solo versión conductores)
+    if(nota && modo === 'conductores') {
       ctx.fillStyle = '#6b8cba';
       ctx.font = 'italic 11px monospace';
       ctx.textAlign = 'right';
@@ -1772,15 +1825,14 @@ function generarImagen(){
     }
   });
 
-  // Sección extra (vacaciones / baja / taller)
-  if(hasExtra) {
+  // Sección extra (solo versión conductores)
+  if(mostrarExtra) {
     const sepY = headerH + activos.length * lineH;
     ctx.fillStyle = '#f0f0f0';
     ctx.fillRect(0, sepY, W, sepH);
     ctx.fillStyle = '#999999';
     ctx.fillRect(0, sepY, W, 1);
 
-    // Labels en la barra separadora
     let sepLabels = [];
     if(ausentes.length > 0) sepLabels.push('VACACIONES / BAJA MÉDICA');
     if(ausPuntImg.length > 0) sepLabels.push('AUSENCIAS');
@@ -1790,103 +1842,118 @@ function generarImagen(){
     ctx.textAlign = 'left';
     ctx.fillText(sepLabels.join('  ·  '), 24, sepY + 18);
 
-    // Listar ausentes primero
     let extraIdx = 0;
     ausentes.forEach((cond) => {
       const y0 = sepY + sepH + extraIdx * lineH;
-      ctx.fillStyle = extraIdx % 2 === 0 ? '#f9f9f9' : '#f4f4f4';
+      ctx.fillStyle = extraIdx % 2 === 0 ? '#f2f2f2' : '#ebebeb';
       ctx.fillRect(0, y0, W, lineH);
-      ctx.fillStyle = '#dddddd';
+      ctx.fillStyle = '#cccccc';
       ctx.fillRect(0, y0 + lineH - 1, W, 1);
       const cy = y0 + lineH / 2 + 6;
-      ctx.fillStyle = '#aaaaaa';
-      ctx.font = 'bold 15px monospace';
+      // Código en color más oscuro
+      ctx.fillStyle = cond.estado === 'vac' ? '#b07800' : '#cc2244';
+      ctx.font = 'bold 16px monospace';
       ctx.textAlign = 'left';
       ctx.fillText(cond.cod.replace('JS',''), 24, cy);
-      ctx.fillStyle = '#bbbbbb';
-      ctx.font = '13px monospace';
-      ctx.fillText(cond.estado === 'vac' ? 'VACACIONES' : 'BAJA MÉDICA', 100, cy);
+      // Estado en texto oscuro legible
+      ctx.fillStyle = '#333333';
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText(cond.estado === 'vac' ? '🏖  VACACIONES' : '🏥  BAJA MÉDICA', 100, cy);
       extraIdx++;
     });
 
-    // Ausencias puntuales
     ausPuntImg.forEach((cond) => {
       const aus=(ausenciasPuntuales[cond.cod]||[]).find(a=>a.ini<=fecha&&a.fin>=fecha);
       const y0=sepY+sepH+extraIdx*lineH;
-      ctx.fillStyle=extraIdx%2===0?'#f9f9f9':'#f4f4f4';ctx.fillRect(0,y0,W,lineH);
-      ctx.fillStyle='#dddddd';ctx.fillRect(0,y0+lineH-1,W,1);
+      ctx.fillStyle=extraIdx%2===0?'#f2f2f2':'#ebebeb';ctx.fillRect(0,y0,W,lineH);
+      ctx.fillStyle='#cccccc';ctx.fillRect(0,y0+lineH-1,W,1);
       const cy2=y0+lineH/2+6;
-      ctx.fillStyle='#4895ef';ctx.font='bold 15px monospace';ctx.textAlign='left';
+      ctx.fillStyle='#1a4a8a';ctx.font='bold 16px monospace';ctx.textAlign='left';
       ctx.fillText(cond.cod.replace('JS',''),24,cy2);
-      ctx.fillStyle='#6b8cba';ctx.font='13px monospace';
+      ctx.fillStyle='#222222';ctx.font='bold 13px monospace';
       const iniF=aus.ini.split('-').reverse().join('/');
       const finF=aus.fin.split('-').reverse().join('/');
-      ctx.fillText(aus.motivo+(aus.ini===aus.fin?' ('+iniF+')':' ('+iniF+' → '+finF+')'),100,cy2);
+      ctx.fillText('📅  '+aus.motivo+(aus.ini===aus.fin?' ('+iniF+')':' ('+iniF+' → '+finF+')'),100,cy2);
       extraIdx++;
     });
 
-    // Luego taller
     tallerList.forEach((t) => {
       const y0 = sepY + sepH + extraIdx * lineH;
-      ctx.fillStyle = extraIdx % 2 === 0 ? '#f9f9f9' : '#f4f4f4';
+      ctx.fillStyle = extraIdx % 2 === 0 ? '#f2f2f2' : '#ebebeb';
       ctx.fillRect(0, y0, W, lineH);
-      ctx.fillStyle = '#dddddd';
+      ctx.fillStyle = '#cccccc';
       ctx.fillRect(0, y0 + lineH - 1, W, 1);
       const cy = y0 + lineH / 2 + 6;
-      // Icono taller
-      ctx.fillStyle = '#9966cc';
-      ctx.font = 'bold 15px monospace';
+      ctx.fillStyle = '#6633aa';
+      ctx.font = 'bold 16px monospace';
       ctx.textAlign = 'left';
       ctx.fillText(t.mat, 24, cy);
-      ctx.fillStyle = '#aa88cc';
-      ctx.font = '13px monospace';
-      ctx.fillText('TALLER' + (t.motivo ? '  ' + t.motivo.substring(0,20) : ''), 100, cy);
+      ctx.fillStyle = '#222222';
+      ctx.font = 'bold 13px monospace';
+      ctx.fillText('🔧  TALLER' + (t.motivo ? '  ' + t.motivo.substring(0,22) : ''), 100, cy);
       extraIdx++;
     });
   }
 
-  // Pie
-  const fy = H - footerH;
-  ctx.fillStyle = '#f5f5f5';
-  ctx.fillRect(0, fy, W, footerH);
-  ctx.fillStyle = '#cccccc';
-  ctx.fillRect(0, fy, W, 1);
-  ctx.fillStyle = '#aaaaaa';
-  ctx.font = '11px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(`GestorRutas Pro · ${fechaFmt} · ${activos.length} conductores`, W / 2, fy + 28);
+  const nombreArchivo = modo === 'mesur'
+    ? `rutas_mesur_${fechaFmt.replace(/\//g,'-')}.png`
+    : `rutas_conductores_${fechaFmt.replace(/\//g,'-')}.png`;
 
+  // Exportar: detectar sistema y usar la mejor estrategia
   const dataURL = cv.toDataURL('image/png');
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if(isIOS){ showImgModal(dataURL, fechaFmt); }
-  else {
-    const lnk = document.createElement('a');
-    lnk.download = `rutas_${fechaFmt.replace(/\//g,'-')}.png`;
-    lnk.href = dataURL;
-    document.body.appendChild(lnk); lnk.click(); document.body.removeChild(lnk);
-    toast('📸 Imagen descargada');
+
+  if(isIOS) {
+    // iPhone: mostrar imagen en modal para mantener pulsada y compartir/guardar
+    showImgModal(dataURL);
+    return;
   }
+
+  // Android: intentar Web Share API con archivo primero
+  cv.toBlob(blob => {
+    const file = new File([blob], nombreArchivo, {type:'image/png'});
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
+      navigator.share({files:[file], title:'Rutas '+fechaFmt})
+        .then(()=>toast('✅ Compartido'))
+        .catch(err=>{
+          if(err.name !== 'AbortError') fallbackAndroid(dataURL, nombreArchivo);
+        });
+    } else {
+      // Android sin Web Share: descargar directamente
+      fallbackAndroid(dataURL, nombreArchivo);
+    }
+  }, 'image/png');
 }
 
-function showImgModal(dataURL, fechaFmt){
-  let ov=document.getElementById('m-img');
+function fallbackAndroid(dataURL, nombreArchivo){
+  const lnk = document.createElement('a');
+  lnk.download = nombreArchivo;
+  lnk.href = dataURL;
+  document.body.appendChild(lnk); lnk.click(); document.body.removeChild(lnk);
+  toast('📸 Imagen guardada en Descargas');
+}
+
+function showImgModal(dataURL){
+  let ov = document.getElementById('m-img');
   if(!ov){
-    ov=document.createElement('div');
-    ov.id='m-img';
-    ov.className='modal-ov';
-    ov.innerHTML=`
+    ov = document.createElement('div');
+    ov.id = 'm-img';
+    ov.className = 'modal-ov';
+    ov.innerHTML = `
       <div class="modal" style="padding:20px">
-        <div class="modal-title" style="font-size:15px;margin-bottom:10px">📸 <em>Guardar imagen</em></div>
-        <p style="font-size:12px;color:var(--txt2);margin-bottom:14px;line-height:1.5">
-          En iPhone: mantén pulsada la imagen → <strong style="color:var(--txt)">Añadir a Fotos</strong>
-        </p>
+        <div class="modal-title" style="font-size:15px;margin-bottom:8px">📸 <em>Guardar / Compartir</em></div>
+        <div style="background:rgba(0,214,143,0.08);border:1px solid rgba(0,214,143,0.2);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--txt);line-height:1.6">
+          <strong style="color:var(--grn)">Mantén pulsada la imagen</strong> y elige:<br>
+          • <strong>Compartir imagen</strong> → WhatsApp, Gmail, etc.<br>
+          • <strong>Añadir a Fotos</strong> → guardar en el carrete
+        </div>
         <img id="img-preview" style="width:100%;border-radius:10px;border:1px solid var(--brd);margin-bottom:14px;display:block" />
         <button class="btn btn-p btn-full" onclick="closeModal('m-img')">✓ Listo</button>
       </div>`;
     document.body.appendChild(ov);
   }
-  document.getElementById('img-preview').src=dataURL;
+  document.getElementById('img-preview').src = dataURL;
   openModal('m-img');
 }
 
@@ -2149,7 +2216,7 @@ loadLS();
 document.getElementById('rd-fecha').value = mananaISO();
 buildDash();
 
-const WELCOME_KEY = 'gestorrutas-welcome-v6';
+const WELCOME_KEY = 'gestorrutas-welcome-v8';
 if(!localStorage.getItem(WELCOME_KEY)){
   setTimeout(()=>openModal('m-welcome'), 800);
   localStorage.setItem(WELCOME_KEY,'1');
@@ -2166,6 +2233,19 @@ if(!localStorage.getItem(WELCOME_KEY)){
 
     <div style="margin-bottom:6px">
       <div style="font-size:10px;color:var(--grn);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(0,214,143,0.2)">🆕 Últimas mejoras</div>
+
+      <!-- NOVEDADES EN ROJO GRANDE -->
+      <div style="background:rgba(255,77,109,0.08);border:2px solid rgba(255,77,109,0.4);border-radius:12px;padding:14px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🚨 NOVEDADES DE ESTA VERSIÓN</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px">
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Compartir directo en Android</strong> — Al exportar sale el menú nativo de compartir: WhatsApp, Gmail, Telegram, etc.</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Sin watermark</strong> — La imagen exportada ya no lleva el texto "GestorRutas Pro" al pie</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Texto legible en imagen</strong> — Las filas de vacaciones, bajas y taller en la imagen exportada ahora se ven con texto oscuro y nítido</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Planificación mejorada</strong> — Celdas C/L más grandes y con mejor contraste para tocar con facilidad</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Dashboard mejorado</strong> — El ranking de largas ya no muestra ceros: avisa si la planificación no se ha generado aún</span></li>
+        </ul>
+      </div>
+
       <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px">
         <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Planificación semanal</strong> — vista semana actual por defecto con flechas ‹ › para navegar y botón para ver el mes completo</span></li>
         <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--grn);font-weight:800;font-size:13px">✦</span><span style="font-size:13px;color:var(--txt);line-height:1.4"><strong style="color:var(--grn)">Alerta fin de mes</strong> — cuando quedan ≤10 días laborables, el dashboard avisa si hay desequilibrio de largas/cortas entre conductores</span></li>
