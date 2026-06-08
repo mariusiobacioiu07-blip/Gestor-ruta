@@ -24,7 +24,7 @@ if('serviceWorker' in navigator && location.protocol !== 'blob:' && location.hos
 :root {
   --bg:#0a0f1a; --s1:#111827; --s2:#1a2235; --s3:#1e2a40;
   --brd:#1e2d45; --grn:#00d68f; --red:#ff4d6d; --yel:#ffbe0b;
-  --blu:#4895ef; --pur:#a855f7; --txt:#e2e8f4; --txt2:#64748b;
+  --blu:#4895ef; --pur:#a855f7; --txt:#e2e8f4; --txt2:#8ba3be;
   --nav-h:64px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -367,11 +367,11 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     <button class="btn btn-sm" id="btn-vista-plan" onclick="toggleVistaPlan()" style="background:rgba(72,149,239,0.1);color:var(--blu);border:1px solid rgba(72,149,239,0.25);font-size:11px">📅 Ver mes completo</button>
   </div>
 
-  <div style="background:rgba(72,149,239,0.07);border:1px solid rgba(72,149,239,0.22);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+  <div style="background:rgba(72,149,239,0.12);border:1px solid rgba(72,149,239,0.4);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
     <span style="font-size:20px">✏️</span>
     <div>
-      <div style="font-size:12px;font-weight:700;color:#4895ef">Cambiar cortas del día</div>
-      <div style="font-size:11px;color:var(--txt2);margin-top:1px">Toca el número azul de la fila <strong style="color:#4895ef">CORTAS</strong> para ajustar cuántas rutas cortas hay ese día</div>
+      <div style="font-size:12px;font-weight:700;color:#7ab8f5">Cambiar cortas del día</div>
+      <div style="font-size:11px;color:#a8c8f0;margin-top:1px">Toca el número azul de la fila <strong style="color:#7ab8f5">CORTAS</strong> para ajustar cuántas rutas cortas hay ese día</div>
     </div>
   </div>
 
@@ -959,13 +959,23 @@ function buildDash() {
   const manDia = manana.getDate();
   const manDiaKey = String(manDia);
 
+  // Conductores que vuelven de vacaciones mañana (disponibles mañana)
+  const vuelvenManana = vacs.filter(c=>{
+    if(!c.vac||!c.vac.fin||c.vac.fin==='?') return false;
+    const [df,mf,yf]=c.vac.fin.split('/');
+    const finDate=new Date(`${yf}-${mf}-${df}`);
+    const diff=Math.round((finDate-hoy)/86400000);
+    return diff===1;
+  });
+  const activosMasVuelven = [...activos, ...vuelvenManana];
+
   // Cortas/largas mañana
   let cortasMan=0, largasMan=0;
-  activos.forEach(c=>{
+  activosMasVuelven.forEach(c=>{
     const t=planData[c.cod]&&(planData[c.cod][manDia]||planData[c.cod][manDiaKey]);
     if(t==='CORTA'||t==='COMP') cortasMan++; else largasMan++;
   });
-  const hayPlan = activos.some(c=>planData[c.cod]&&(planData[c.cod][manDia]||planData[c.cod][manDiaKey]));
+  const hayPlan = activosMasVuelven.some(c=>planData[c.cod]&&(planData[c.cod][manDia]||planData[c.cod][manDiaKey]));
 
   // Progreso del mes
   const diasTotales=diasLaborables();
@@ -1006,8 +1016,8 @@ function buildDash() {
   document.getElementById('dash-stats').innerHTML=`
     <div class="stat" onclick="goScreen('ruta')" style="cursor:pointer">
       <div class="stat-label">Conductores disponibles mañana</div>
-      <div class="stat-value">${activos.length}</div>
-      <div class="stat-sub">${mananaFmt()}</div>
+      <div class="stat-value">${activosMasVuelven.length}</div>
+      <div class="stat-sub">${mananaFmt()}${vuelvenManana.length>0?` (+${vuelvenManana.length} vuelta)`:''}</div>
     </div>
     <div class="stat r" onclick="goScreen('cond')" style="cursor:pointer">
       <div class="stat-label">Bajas médicas</div>
@@ -1237,33 +1247,89 @@ let cortasDia = {};
 let planVistaCompleta = false; // false = semanal, true = mensual
 let planSemanaOffset = 0; // 0 = semana actual, -1 anterior, +1 siguiente
 
-function algoritmo() {
+function algoritmo(desdeDia) {
+  // desdeDia: si se pasa, solo recalcula días >= desdeDia (preserva anteriores)
   const activos = conductores.filter(c=>c.estado==='activo');
   const dias = diasLaborables();
   dias.forEach(d => { if(cortasDia[d] === undefined) cortasDia[d] = DEFAULT_CORTAS; });
-  planData = {};
-  activos.forEach(c => { planData[c.cod] = {}; });
-  const acum = {};
-  activos.forEach(c => { acum[c.cod] = 0; });
-  dias.forEach(dia => {
+
+  // Si no se pasa desdeDia, reinicia todo
+  if(!desdeDia) {
+    planData = {};
+    activos.forEach(c => { planData[c.cod] = {}; });
+  } else {
+    // Asegurarse que existe planData para cada activo
+    activos.forEach(c => { if(!planData[c.cod]) planData[c.cod] = {}; });
+  }
+
+  // Días a recalcular
+  const diasRecalc = desdeDia ? dias.filter(d => d >= desdeDia) : dias;
+  // Días que se preservan (pasado + hoy + mañana)
+  const diasPreservados = desdeDia ? dias.filter(d => d < desdeDia) : [];
+
+  // Acumulados de cortas contando solo días preservados (para equilibrio mensual)
+  const acumCortas = {};
+  activos.forEach(c => {
+    acumCortas[c.cod] = diasPreservados.filter(d => {
+      const v = (planData[c.cod]||{})[d];
+      return v === 'CORTA' || v === 'COMP';
+    }).length;
+  });
+
+  diasRecalc.forEach(dia => {
     const totalCortas = cortasDia[dia] ?? DEFAULT_CORTAS;
-    planData['JS228'][dia] = 'CORTA'; acum['JS228']++;
+    planData['JS228'][dia] = 'CORTA';
+    acumCortas['JS228'] = (acumCortas['JS228']||0) + 1;
     const resto = activos.filter(c => c.cod !== 'JS228');
+    const cortasResto = Math.max(0, totalCortas - 1);
+
+    // Calcular racha de largas para cada conductor (días ya asignados antes de este)
+    const rachLargas = {};
+    resto.forEach(c => {
+      let racha = 0;
+      // Recorrer todos los días antes de 'dia' en orden descendente
+      const diasAnteriores = dias.filter(d => d < dia).sort((a,b)=>b-a);
+      for(const d of diasAnteriores) {
+        const v = (planData[c.cod]||{})[d];
+        if(v === 'LARGA') racha++;
+        else break;
+      }
+      rachLargas[c.cod] = racha;
+    });
+
+    // Ordenar: primero los que tienen más cortas acumuladas les toca larga,
+    // pero si llevan 4+ largas seguidas suben en prioridad de corta
     resto.sort((a, b) => {
-      const diff = acum[a.cod] - acum[b.cod];
+      // Si uno lleva 4+ largas seguidas, tiene prioridad máxima para corta
+      const penA = rachLargas[a.cod] >= 4 ? -1000 : 0;
+      const penB = rachLargas[b.cod] >= 4 ? -1000 : 0;
+      const scoreA = acumCortas[a.cod] + penA;
+      const scoreB = acumCortas[b.cod] + penB;
+      const diff = scoreA - scoreB;
       return diff !== 0 ? diff : Math.random() - 0.5;
     });
-    const cortasResto = Math.max(0, totalCortas - 1);
+
     resto.forEach((c, i) => {
-      if(i < cortasResto) { planData[c.cod][dia] = 'CORTA'; acum[c.cod]++; }
-      else { planData[c.cod][dia] = 'LARGA'; }
+      if(i < cortasResto) {
+        planData[c.cod][dia] = 'CORTA';
+        acumCortas[c.cod] = (acumCortas[c.cod]||0) + 1;
+      } else {
+        planData[c.cod][dia] = 'LARGA';
+      }
     });
   });
   planGenerado = true;
 }
 
 function recalcularPlan() {
-  algoritmo(); renderPlan(); saveLS(); toast('⚡ Planificación recalculada');
+  // Solo recalcula desde pasado mañana en adelante; respeta hoy y mañana
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const pasadoManana = new Date(hoy); pasadoManana.setDate(hoy.getDate()+2);
+  const pasadoMananaNum = pasadoManana.getDate();
+  const { mes: _pmR, anio: _paR } = planMesRef();
+  const mismoMes = hoy.getMonth() === _pmR && hoy.getFullYear() === _paR;
+  algoritmo(mismoMes ? pasadoMananaNum : null);
+  renderPlan(); saveLS(); toast('⚡ Recalculado desde día ' + (mismoMes ? String(pasadoMananaNum).padStart(2,'0') : '01'));
 }
 
 function setCortasDia(dia, val) {
@@ -2171,15 +2237,21 @@ function renderHistLista() {
   const filtrado = histFiltroActivo === 'all' ? historial : historial.filter(h=>h.tipo===histFiltroActivo);
   document.getElementById('hist-lista').innerHTML = filtrado.length === 0
     ? '<div class="hist-item" style="color:var(--txt2);font-size:12px">Sin registros</div>'
-    : filtrado.map(h=>`
-    <div class="hist-item">
-      <div class="hist-top">
-        <span class="hist-fecha">${h.fecha}</span>
-        <span class="hist-tag ${tags[h.tipo]||'ht-m'}">${labels[h.tipo]||h.tipo}</span>
-        <span class="list-cod" style="font-size:12px">${h.cod}</span>
+    : filtrado.map((h,i)=>{
+      // Índice real en historial (puede diferir si hay filtro activo)
+      const realIdx = historial.indexOf(h);
+      return `
+    <div class="hist-item" style="display:flex;align-items:flex-start;gap:8px">
+      <div style="flex:1;min-width:0">
+        <div class="hist-top">
+          <span class="hist-fecha">${h.fecha}</span>
+          <span class="hist-tag ${tags[h.tipo]||'ht-m'}">${labels[h.tipo]||h.tipo}</span>
+          <span class="list-cod" style="font-size:12px">${h.cod}</span>
+        </div>
+        <div class="hist-detail">${h.det}</div>
       </div>
-      <div class="hist-detail">${h.det}</div>
-    </div>`).join('');
+      <button onclick="borrarEntradaHist(${realIdx})" style="background:none;border:none;color:#ff4d6d;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;flex-shrink:0;opacity:0.6" title="Eliminar entrada">🗑</button>
+    </div>`}).join('');
 }
 
 function buildHist(){
@@ -2262,6 +2334,11 @@ function showCondStats(cod) {
     ${histCond.map(h=>`<div style="font-size:12px;color:var(--txt2);padding:5px 0;border-bottom:1px solid rgba(30,45,69,0.4)">${h.fecha} — ${h.det}</div>`).join('')}`:''}
   `;
   openModal('m-cond-stats');
+}
+
+function borrarEntradaHist(idx) {
+  historial.splice(idx, 1);
+  saveLS(); renderHistLista();
 }
 
 function borrarHistConfirmado() {
