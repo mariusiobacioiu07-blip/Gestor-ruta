@@ -268,11 +268,10 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
       <table class="ruta-table">
         <thead>
           <tr>
-            <th style="width:16%">COD.</th>
-            <th style="width:8%"></th>
-            <th style="width:34%">RUTA</th>
-            <th style="width:24%">MATRÍC.</th>
-            <th style="width:18%">AYUD.</th>
+            <th style="width:18%">COD.</th>
+            <th style="width:40%">RUTA</th>
+            <th style="width:26%">MATRÍC.</th>
+            <th style="width:16%">AYUD.</th>
           </tr>
         </thead>
         <tbody id="rd-tbody"></tbody>
@@ -864,7 +863,7 @@ let camiones = ['9988NDR','1867MGV','9114NFH','2135MRL','7482MPM','0094MMR','752
 let camionesAlquiler = new Set(['1867MGV','7525MSZ','1855MGS']);
 let ausenciasPuntuales = {};
 
-let rutas = ['HUELVA CAPITAL','SIERRA HUELVA','CADIZ COSTA','BADAJOZ MERIDA','BADAJOZ BAJO','JÓDAR','JAEN ALTO','JAEN CAP.','UBRIQUE','MONTANCHEZ','CÓRDOBA','SIERRA CORD.','CÁCERES','CAC.EXTRA','BAILEN','BAZA','COSTA TROPICAL','MÁLAGA','TRUJILLO','A-49','A-92EXTRA','LUCENA','A-92'];
+let rutas = ['A-49','A-92','A-92EXTRA','BAILEN','BADAJOZ BAJO','BADAJOZ MERIDA','BAZA','CÁCERES','CAC.EXTRA','CADIZ COSTA','CÓRDOBA','COSTA TROPICAL','HUELVA CAPITAL','JAEN ALTO','JAEN CAP.','JÓDAR','LUCENA','MÁLAGA','MONTANCHEZ','SIERRA CORD.','SIERRA HUELVA','TRUJILLO','UBRIQUE'];
 
 let historial = [
   {fecha:'04/06 21:18',cod:'JS190',tipo:'manual',det:'LARGA → CORTA (manual)'},
@@ -908,7 +907,7 @@ function loadLS() {
     const d = JSON.parse(raw);
     if(d.conductores) conductores = d.conductores;
     if(d.camiones) camiones = d.camiones;
-    if(d.rutas) rutas = d.rutas;
+    if(d.rutas) { rutas = d.rutas; rutas.sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'})); }
     if(d.historial) historial = d.historial;
     if(d.planData) planData = d.planData;
     if(d.planGenerado !== undefined) planGenerado = d.planGenerado;
@@ -1923,24 +1922,21 @@ function buildRuta(){
 
     return `<tr${filaStyle?' style="'+filaStyle+'"':''}>
       <td style="padding:6px 2px 6px 6px;white-space:nowrap">
-        <span class="ruta-cod" style="font-size:11px">${c.cod}</span>
+        <span class="ruta-cod" style="font-size:12px;font-weight:800">${c.cod}</span>
         ${miMatOcupada||sinMat?'<span style="font-size:10px">⚠️</span>':''}
       </td>
       <td style="padding:6px 2px">
-        <span class="tipo-pill ${tp}" style="font-size:9px;padding:2px 4px">${letra}</span>
+        <select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)" style="margin-bottom:2px;font-size:11px;font-weight:600">${rutaOpts}</select>
+        <select class="rd-select" data-cod="${c.cod}" data-f="ruta2" onchange="upRD(this)" style="font-size:11px;${tieneRuta2?'color:var(--grn);font-weight:700;border-color:rgba(0,214,143,0.4)':'color:var(--txt2)'}">${ruta2Opts}</select>
       </td>
       <td style="padding:6px 2px">
-        <select class="rd-select" data-cod="${c.cod}" data-f="ruta" onchange="upRD(this)" style="margin-bottom:2px;font-size:10px">${rutaOpts}</select>
-        <select class="rd-select" data-cod="${c.cod}" data-f="ruta2" onchange="upRD(this)" style="font-size:10px;${tieneRuta2?'color:var(--grn);font-weight:700;border-color:rgba(0,214,143,0.4)':'color:var(--txt2)'}">${ruta2Opts}</select>
-      </td>
-      <td style="padding:6px 2px">
-        <select class="rd-select mat-sel" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matStyle};font-size:10px">${matOpts}</select>
+        <select class="rd-select mat-sel" data-cod="${c.cod}" data-f="matricula" onchange="upRD(this)" style="${matStyle};font-size:11px;font-weight:700">${matOpts}</select>
         ${matEsAlq&&!sinMat?'<div style="font-size:8px;color:var(--red);font-weight:700;text-align:center">ALQ</div>':''}
       </td>
       <td style="padding:6px 2px">
-        <select class="rd-select" data-cod="${c.cod}" data-f="ayudante" onchange="upRD(this)" style="margin-bottom:2px;font-size:10px">${ayOpts}</select>
+        <select class="rd-select" data-cod="${c.cod}" data-f="ayudante" onchange="upRD(this)" style="margin-bottom:2px;font-size:11px">${ayOpts}</select>
         <div id="ay-${c.cod}" style="display:${st.ayudante==='SÍ'?'block':'none'}">
-          <select class="rd-select" data-cod="${c.cod}" data-f="ayudanteJS" onchange="upRD(this)" style="font-size:10px"><option value="">— JS —</option>${jsOpts}</select>
+          <select class="rd-select" data-cod="${c.cod}" data-f="ayudanteJS" onchange="upRD(this)" style="font-size:11px"><option value="">— JS —</option>${jsOpts}</select>
         </div>
       </td>
     </tr>`;
@@ -1977,6 +1973,15 @@ function upRD(el){
   if(f==='matricula' && el.value){
     Object.keys(rdState).forEach(otro=>{
       if(otro!==cod && rdState[otro].matricula===el.value) rdState[otro].matricula='';
+    });
+  }
+  // Ruta exclusiva: si asigno una ruta que ya lleva otro, ese queda sin ruta
+  if((f==='ruta'||f==='ruta2') && el.value && el.value!=='__nueva__'){
+    Object.keys(rdState).forEach(otro=>{
+      if(otro!==cod){
+        if(rdState[otro].ruta===el.value) rdState[otro].ruta='';
+        if(rdState[otro].ruta2===el.value) rdState[otro].ruta2='';
+      }
     });
   }
   saveLS();
@@ -2061,7 +2066,7 @@ function generarImagen(modo){
     + (mostrarExtra ? sepH + extraLines * lineH : 0)
     + footerH;
 
-  const SCALE = 3; // Alta resolución: 3x
+  const SCALE = 4; // Alta resolución: 4x
   const cv = document.createElement('canvas');
   cv.width = W * SCALE; cv.height = H * SCALE;
   const ctx = cv.getContext('2d');
@@ -2079,19 +2084,19 @@ function generarImagen(modo){
 
   // Fecha
   ctx.fillStyle = '#111111';
-  ctx.font = 'bold 30px monospace';
+  ctx.font = 'bold 30px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText(fechaFmt, 24, 50);
 
   // Ciudad + etiqueta versión
   ctx.fillStyle = '#444444';
-  ctx.font = 'bold 18px monospace';
+  ctx.font = 'bold 18px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'right';
   ctx.fillText(ciudad, W - 24, 50);
 
   // Cabeceras
   ctx.fillStyle = '#888888';
-  ctx.font = 'bold 10px monospace';
+  ctx.font = 'bold 10px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText('COD', 24, headerH - 10);
   ctx.fillText('RUTA / DESTINO', 100, headerH - 10);
@@ -2114,13 +2119,13 @@ function generarImagen(modo){
 
     // COD
     ctx.fillStyle = '#111111';
-    ctx.font = 'bold 17px monospace';
+    ctx.font = 'bold 17px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(codTxt, 24, cy);
 
     // RUTA
     ctx.fillStyle = '#222222';
-    ctx.font = '15px monospace';
+    ctx.font = '15px Arial, Helvetica, sans-serif';
     let rutaStr;
     if(st.ruta2){const r1=st.ruta.length>10?st.ruta.substring(0,9)+'.':st.ruta;const r2=st.ruta2.length>10?st.ruta2.substring(0,9)+'.':st.ruta2;rutaStr=r1+' + '+r2;}
     else{rutaStr=st.ruta.length>17?st.ruta.substring(0,16)+'…':st.ruta;}
@@ -2128,13 +2133,13 @@ function generarImagen(modo){
 
     // MATRÍCULA
     ctx.fillStyle = camionesAlquiler.has(st.matricula) ? '#cc2200' : '#555555';
-    ctx.font = 'bold 14px monospace';
+    ctx.font = 'bold 14px Arial, Helvetica, sans-serif';
     ctx.fillText(st.matricula, 420, cy);
 
     // NOTA (solo versión conductores)
     if(nota && modo === 'conductores') {
       ctx.fillStyle = '#6b8cba';
-      ctx.font = 'italic 11px monospace';
+      ctx.font = 'italic 11px Arial, Helvetica, sans-serif';
       ctx.textAlign = 'right';
       ctx.fillText(nota.length > 18 ? nota.substring(0,17)+'…' : nota, W - 14, cy);
       ctx.textAlign = 'left';
@@ -2154,7 +2159,7 @@ function generarImagen(modo){
     if(ausPuntImg.length > 0) sepLabels.push('AUSENCIAS');
     if(hasTaller) sepLabels.push('TALLER');
     ctx.fillStyle = '#888888';
-    ctx.font = 'bold 10px monospace';
+    ctx.font = 'bold 10px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(sepLabels.join('  ·  '), 24, sepY + 18);
 
@@ -2168,12 +2173,12 @@ function generarImagen(modo){
       const cy = y0 + lineH / 2 + 6;
       // Código en color más oscuro
       ctx.fillStyle = cond.estado === 'vac' ? '#b07800' : '#cc2244';
-      ctx.font = 'bold 16px monospace';
+      ctx.font = 'bold 16px Arial, Helvetica, sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText(cond.cod.replace('JS',''), 24, cy);
       // Estado en texto oscuro legible
       ctx.fillStyle = '#333333';
-      ctx.font = 'bold 14px monospace';
+      ctx.font = 'bold 14px Arial, Helvetica, sans-serif';
       ctx.fillText(cond.estado === 'vac' ? '🏖  VACACIONES' : '🏥  BAJA MÉDICA', 100, cy);
       extraIdx++;
     });
@@ -2184,9 +2189,9 @@ function generarImagen(modo){
       ctx.fillStyle=extraIdx%2===0?'#f2f2f2':'#ebebeb';ctx.fillRect(0,y0,W,lineH);
       ctx.fillStyle='#cccccc';ctx.fillRect(0,y0+lineH-1,W,1);
       const cy2=y0+lineH/2+6;
-      ctx.fillStyle='#1a4a8a';ctx.font='bold 16px monospace';ctx.textAlign='left';
+      ctx.fillStyle='#1a4a8a';ctx.font='bold 16px Arial, Helvetica, sans-serif';ctx.textAlign='left';
       ctx.fillText(cond.cod.replace('JS',''),24,cy2);
-      ctx.fillStyle='#222222';ctx.font='bold 13px monospace';
+      ctx.fillStyle='#222222';ctx.font='bold 13px Arial, Helvetica, sans-serif';
       const iniF=aus.ini.split('-').reverse().join('/');
       const finF=aus.fin.split('-').reverse().join('/');
       ctx.fillText('📅  '+aus.motivo+(aus.ini===aus.fin?' ('+iniF+')':' ('+iniF+' → '+finF+')'),100,cy2);
@@ -2201,11 +2206,11 @@ function generarImagen(modo){
       ctx.fillRect(0, y0 + lineH - 1, W, 1);
       const cy = y0 + lineH / 2 + 6;
       ctx.fillStyle = '#6633aa';
-      ctx.font = 'bold 16px monospace';
+      ctx.font = 'bold 16px Arial, Helvetica, sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText(t.mat, 24, cy);
       ctx.fillStyle = '#222222';
-      ctx.font = 'bold 13px monospace';
+      ctx.font = 'bold 13px Arial, Helvetica, sans-serif';
       ctx.fillText('🔧  TALLER' + (t.motivo ? '  ' + t.motivo.substring(0,22) : ''), 100, cy);
       extraIdx++;
     });
