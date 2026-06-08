@@ -362,6 +362,14 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     <button class="btn btn-sm" id="btn-vista-plan" onclick="toggleVistaPlan()" style="background:rgba(72,149,239,0.1);color:var(--blu);border:1px solid rgba(72,149,239,0.25);font-size:11px">📅 Ver mes completo</button>
   </div>
 
+  <div style="background:rgba(72,149,239,0.07);border:1px solid rgba(72,149,239,0.22);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:20px">✏️</span>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:#4895ef">Cambiar cortas del día</div>
+      <div style="font-size:11px;color:var(--txt2);margin-top:1px">Toca el número azul de la fila <strong style="color:#4895ef">CORTAS</strong> para ajustar cuántas rutas cortas hay ese día</div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-head">
       <span id="plan-tabla-titulo">Semana actual</span>
@@ -908,8 +916,8 @@ function buildDash() {
   const activos = conductores.filter(c=>c.estado==='activo');
   const vacs = conductores.filter(c=>c.estado==='vac');
   const bajas = conductores.filter(c=>c.estado==='baja');
-  const hoy = new Date();
-  const manana = new Date(); manana.setDate(hoy.getDate()+1);
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const manana = new Date(hoy); manana.setDate(hoy.getDate()+1);
   const mananaISO_ = manana.toISOString().split('T')[0];
   const manDia = manana.getDate();
   const manDiaKey = String(manDia);
@@ -943,9 +951,10 @@ function buildDash() {
       const [df,mf,yf]=c.vac.fin.split('/');
       const finDate=new Date(`${yf}-${mf}-${df}`);
       const diff=Math.round((finDate-hoy)/86400000);
-      if(diff===0) alertasVac.push({tipo:'vuelta',txt:`🎉 ${c.cod} vuelve mañana de vacaciones`});
-      else if(diff===1) alertasVac.push({tipo:'vuelta',txt:`✅ ${c.cod} vuelve en 2 días (${c.vac.fin})`});
-      else if(diff===2) alertasVac.push({tipo:'vuelta',txt:`${c.cod} vuelve en 3 días (${c.vac.fin})`});
+      if(diff===0) alertasVac.push({tipo:'vuelta',txt:`🎉 ${c.cod} vuelve hoy de vacaciones`});
+      else if(diff===1) alertasVac.push({tipo:'vuelta',txt:`✅ ${c.cod} vuelve mañana de vacaciones (${c.vac.fin})`});
+      else if(diff===2) alertasVac.push({tipo:'vuelta',txt:`✅ ${c.cod} vuelve en 2 días (${c.vac.fin})`});
+      else if(diff===3) alertasVac.push({tipo:'vuelta',txt:`${c.cod} vuelve en 3 días (${c.vac.fin})`});
     }
     if(c.vac.ini){
       const [di,mi,yi]=c.vac.ini.split('/');
