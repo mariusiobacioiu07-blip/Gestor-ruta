@@ -260,8 +260,6 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     </div>
   </div>
 
-  <div id="rd-alerts"></div>
-
   <div class="card">
     <div class="card-head">
       <span>Asignación de rutas</span>
@@ -281,6 +279,8 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
       </table>
     </div>
   </div>
+
+  <div id="rd-alerts"></div>
 
   <div class="card">
     <div class="card-head">
@@ -379,6 +379,15 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     <div class="card-head">
       <span id="plan-tabla-titulo">Semana actual</span>
       <span style="font-size:10px;color:var(--txt2)">toca celda · desliza →</span>
+    </div>
+    <!-- LEYENDA -->
+    <div style="padding:8px 12px;border-bottom:1px solid var(--brd);display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center">
+      <span style="font-size:9px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px;flex-basis:100%">Leyenda:</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:20px;border-radius:4px;background:rgba(0,214,143,0.18);color:#00d68f;font-weight:800">C</span><span style="color:var(--txt2)">= Corta</span></span>
+      <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:20px;border-radius:4px;background:rgba(255,77,109,0.18);color:#ff4d6d;font-weight:800">L</span><span style="color:var(--txt2)">= Larga</span></span>
+      <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:20px;border-radius:4px;background:rgba(255,190,11,0.18);color:#ffbe0b;font-weight:800;font-size:9px">CO</span><span style="color:var(--txt2)">= Compartida</span></span>
+      <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:20px;border-radius:4px;background:rgba(255,190,11,0.18);color:#ffbe0b;font-weight:800">V</span><span style="color:var(--txt2)">= Vacaciones</span></span>
+      <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:20px;border-radius:4px;background:rgba(72,149,239,0.18);color:#4895ef;font-weight:800;font-size:9px">AS</span><span style="color:var(--txt2)">= Ausente</span></span>
     </div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
       <table id="plan-tabla" style="border-collapse:collapse;font-size:11px;min-width:500px"></table>
@@ -904,6 +913,10 @@ function loadLS() {
     if(d.planData) planData = d.planData;
     if(d.planGenerado !== undefined) planGenerado = d.planGenerado;
     if(d.rdState) Object.assign(rdState, d.rdState);
+    // Asegurar que conductores que no estaban en el guardado tengan entrada
+    conductores.forEach((c,i) => {
+      if(!rdState[c.cod]) rdState[c.cod] = {ruta:rutas[i%rutas.length], ruta2:'', matricula:c.mat!=='—'?c.mat:(camiones[0]||''), ayudante:'NO', ayudanteJS:''};
+    });
     if(d.tipos) Object.assign(tipos, d.tipos);
     if(d.cortasDia) Object.assign(cortasDia, d.cortasDia);
     if(d.tallerList) tallerList = d.tallerList;
@@ -933,7 +946,7 @@ function goScreen(id) {
 // ═══════════════════════════════════════
 function mananaISO() {
   const d = new Date(); d.setDate(d.getDate()+1);
-  return d.toISOString().split('T')[0];
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function mananaFmt() {
   const d = new Date(); d.setDate(d.getDate()+1);
@@ -955,19 +968,23 @@ function buildDash() {
   const bajas = conductores.filter(c=>c.estado==='baja');
   const hoy = new Date(); hoy.setHours(0,0,0,0);
   const manana = new Date(hoy); manana.setDate(hoy.getDate()+1);
-  const mananaISO_ = manana.toISOString().split('T')[0];
+  // Usar componentes locales para evitar desfase de zona horaria (España UTC+2)
+  const mananaISO_ = `${manana.getFullYear()}-${String(manana.getMonth()+1).padStart(2,'0')}-${String(manana.getDate()).padStart(2,'0')}`;
   const manDia = manana.getDate();
   const manDiaKey = String(manDia);
 
   // Conductores que vuelven de vacaciones mañana (disponibles mañana)
+  // diff===0: vacaciones terminan hoy → disponible mañana
+  // diff===1: vacaciones terminan mañana → disponible pasado, NO contar aquí
   const vuelvenManana = vacs.filter(c=>{
     if(!c.vac||!c.vac.fin||c.vac.fin==='?') return false;
     const [df,mf,yf]=c.vac.fin.split('/');
     const finDate=new Date(`${yf}-${mf}-${df}`);
+    finDate.setHours(0,0,0,0);
     const diff=Math.round((finDate-hoy)/86400000);
-    return diff===1;
+    return diff===0;
   });
-  const activosMasVuelven = [...activos, ...vuelvenManana];
+  const activosMasVuelven = [...activos, ...vuelvenManana].filter(c => !tieneAusenciaPuntual(c.cod, mananaISO_));
 
   // Cortas/largas mañana
   let cortasMan=0, largasMan=0;
@@ -998,8 +1015,8 @@ function buildDash() {
       const [df,mf,yf]=c.vac.fin.split('/');
       const finDate=new Date(`${yf}-${mf}-${df}`);
       const diff=Math.round((finDate-hoy)/86400000);
-      if(diff===0) alertasVac.push({tipo:'vuelta',txt:`🎉 ${c.cod} vuelve hoy de vacaciones`});
-      else if(diff===1) alertasVac.push({tipo:'vuelta',txt:`✅ ${c.cod} vuelve mañana de vacaciones (${c.vac.fin})`});
+      if(diff===0) alertasVac.push({tipo:'vuelta',txt:`🎉 ${c.cod} termina vacaciones hoy — disponible mañana`});
+      else if(diff===1) alertasVac.push({tipo:'vuelta',txt:`✅ ${c.cod} termina vacaciones mañana — disponible pasado (${c.vac.fin})`});
       else if(diff===2) alertasVac.push({tipo:'vuelta',txt:`✅ ${c.cod} vuelve en 2 días (${c.vac.fin})`});
       else if(diff===3) alertasVac.push({tipo:'vuelta',txt:`${c.cod} vuelve en 3 días (${c.vac.fin})`});
     }
@@ -1129,7 +1146,15 @@ function buildDash() {
       </div>
     </div>`;
 
+  // Recoger ausencias puntuales activas hoy
+  const ausHoy = [];
+  conductores.filter(c=>c.estado==='activo').forEach(c => {
+    const ap = (ausenciasPuntuales[c.cod]||[]).find(a => a.ini <= mananaISO_ && a.fin >= mananaISO_);
+    if(ap) ausHoy.push({c, ap});
+  });
+
   const ausList=[
+    ...ausHoy.map(({c,ap})=>`<div class="list-item" onclick="goScreen('cond')" style="cursor:pointer"><div><span class="list-cod">${c.cod}</span><div class="list-sub">${ap.motivo} — hasta ${ap.fin.split('-').reverse().join('/')}</div></div><span class="badge bb">📅 AUSENTE</span></div>`),
     ...vacs.map(c=>`<div class="list-item" onclick="goScreen('cond')" style="cursor:pointer"><div><span class="list-cod">${c.cod}</span><div class="list-sub">${c.vac?.fin==='?'?'Sin fecha de vuelta':'Hasta '+c.vac?.fin}</div></div><span class="badge by">🏖️ VAC</span></div>`),
     ...bajas.map(c=>`<div class="list-item" onclick="goScreen('cond')" style="cursor:pointer"><div><span class="list-cod">${c.cod}</span><div class="list-sub">Desde ${c.bajaDesde||'—'}</div></div><span class="badge br">🏥 BAJA</span></div>`),
     ...tallerList.map(t=>`<div class="list-item" onclick="goScreen('cam')" style="cursor:pointer"><div><span class="list-cod" style="color:var(--pur)">${t.mat}</span><div class="list-sub">${t.motivo||'En taller'} · Desde ${t.desde||'—'}</div></div><span class="badge bp">🔧 TALLER</span></div>`)
@@ -1250,16 +1275,19 @@ let planSemanaOffset = 0; // 0 = semana actual, -1 anterior, +1 siguiente
 function algoritmo(desdeDia) {
   // desdeDia: si se pasa, solo recalcula días >= desdeDia (preserva anteriores)
   const activos = conductores.filter(c=>c.estado==='activo');
+  // Incluir conductores en vacaciones para que tengan C/L en días fuera de su periodo
+  const enVacaciones = conductores.filter(c=>c.estado==='vac');
+  const todosParaPlan = [...activos, ...enVacaciones];
   const dias = diasLaborables();
   dias.forEach(d => { if(cortasDia[d] === undefined) cortasDia[d] = DEFAULT_CORTAS; });
 
   // Si no se pasa desdeDia, reinicia todo
   if(!desdeDia) {
     planData = {};
-    activos.forEach(c => { planData[c.cod] = {}; });
+    todosParaPlan.forEach(c => { planData[c.cod] = {}; });
   } else {
-    // Asegurarse que existe planData para cada activo
-    activos.forEach(c => { if(!planData[c.cod]) planData[c.cod] = {}; });
+    // Asegurarse que existe planData para cada conductor
+    todosParaPlan.forEach(c => { if(!planData[c.cod]) planData[c.cod] = {}; });
   }
 
   // Días a recalcular
@@ -1276,11 +1304,25 @@ function algoritmo(desdeDia) {
     }).length;
   });
 
+  const { anio: _algAnio, mes: _algMes } = planMesRef();
+
   diasRecalc.forEach(dia => {
+    const fechaDia = `${_algAnio}-${String(_algMes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    // Marcar días de vacaciones para conductores en vac
+    enVacaciones.forEach(c => {
+      if(estaDeVacacionesEn(c, fechaDia)) {
+        planData[c.cod][dia] = 'VAC';
+      }
+      // Los días fuera del periodo de vacaciones se asignan abajo igual que activos
+    });
+
     const totalCortas = cortasDia[dia] ?? DEFAULT_CORTAS;
-    planData['JS228'][dia] = 'CORTA';
-    acumCortas['JS228'] = (acumCortas['JS228']||0) + 1;
-    const resto = activos.filter(c => c.cod !== 'JS228');
+    if(planData['JS228']) { planData['JS228'][dia] = 'CORTA'; acumCortas['JS228'] = (acumCortas['JS228']||0) + 1; }
+    // Solo participan en el reparto los activos + los en vac que ese día NO están de vacaciones
+    const participantes = activos.filter(c => c.cod !== 'JS228').concat(
+      enVacaciones.filter(c => !estaDeVacacionesEn(c, fechaDia))
+    );
+    const resto = participantes;
     const cortasResto = Math.max(0, totalCortas - 1);
 
     // Calcular racha de largas para cada conductor (días ya asignados antes de este)
@@ -1407,6 +1449,8 @@ function getSemanaActual() {
 
 function renderPlan() {
   const activos = conductores.filter(c=>c.estado==='activo');
+  // Conductores en vacaciones o asuntos personales (AP) — se muestran en la tabla con V/AP
+  const enVacaciones = conductores.filter(c=>c.estado==='vac');
   const diasTodos = diasLaborables();
   const hoyDia = new Date().getDate();
   const hoyMes = new Date().getMonth();
@@ -1430,7 +1474,7 @@ function renderPlan() {
   }
   if(document.getElementById('plan-tabla-titulo')) document.getElementById('plan-tabla-titulo').textContent = tituloTabla;
   document.getElementById('plan-dias').textContent = dias.length;
-  document.getElementById('plan-ncond').textContent = activos.length;
+  document.getElementById('plan-ncond').textContent = activos.length + enVacaciones.length;
   const mediaCortas = dias.length > 0
     ? (dias.reduce((s,d) => s + (cortasDia[d] ?? DEFAULT_CORTAS), 0) / dias.length).toFixed(1)
     : DEFAULT_CORTAS;
@@ -1474,30 +1518,58 @@ function renderPlan() {
   });
   html += '<td style="background:#0d1a2e;border-bottom:2px solid #1e2d45"></td><td style="background:#0d1a2e;border-bottom:2px solid #1e2d45"></td>';
   html += '</tr></thead><tbody>';
-  activos.forEach((c, rowIdx) => {
-    const cortas = cortasTotales[c.cod]||0;
+  // Mezclar activos + vacaciones en orden alfabético/numérico para la tabla
+  const todosOrdenados = conductores.filter(c => c.estado === 'activo' || c.estado === 'vac');
+  todosOrdenados.forEach((c, rowIdx) => {
+    const esVac = c.estado === 'vac';
+    const cortas = cortasTotales[c.cod] || 0;
     const comp = Object.values(planData[c.cod]||{}).filter(v=>v==='COMP').length;
     const largas = diasTodos.length - cortas;
-    const rowBg = rowIdx % 2 === 0 ? '#111827' : '#0e1520';
+    const rowBg = esVac
+      ? (rowIdx % 2 === 0 ? '#12181f' : '#0e1419')
+      : (rowIdx % 2 === 0 ? '#111827' : '#0e1520');
+    const codColor = esVac ? '#ffbe0b' : '#00d68f';
     html += '<tr>';
-    html += `<td style="position:sticky;left:0;background:${rowBg};z-index:1;padding:8px 10px;font-family:monospace;font-weight:700;font-size:13px;color:#00d68f;border-bottom:1px solid rgba(30,45,69,0.5);border-right:1px solid #1e2d45;cursor:pointer" onclick="showCondStats('${c.cod}')">${c.cod}</td>`;
+    html += `<td style="position:sticky;left:0;background:${rowBg};z-index:1;padding:8px 10px;font-family:monospace;font-weight:700;font-size:13px;color:${codColor};border-bottom:1px solid rgba(30,45,69,0.5);border-right:1px solid #1e2d45;cursor:pointer;white-space:nowrap" onclick="showCondStats('${c.cod}')">${c.cod}</td>`;
+    const { anio: _vAnio, mes: _vMes } = planMesRef();
     dias.forEach(d => {
-      const val = (planData[c.cod]||{})[d] || '—';
-      const isC = val==='CORTA';
-      const isComp = val==='COMP';
-      let pill;
-      if(val==='—') {
-        pill = '<span style="font-size:11px;color:#64748b">—</span>';
+      const fechaDia = `${_vAnio}-${String(_vMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      let cell;
+      // Comprobar si el conductor tiene ausencia puntual ese día
+      const ausencia = (ausenciasPuntuales[c.cod]||[]).find(a => a.ini <= fechaDia && a.fin >= fechaDia);
+      if(ausencia && !estaDeVacacionesEn(c, fechaDia)) {
+        // Ausencia puntual en día laborable: mostrar AS (ausente) en azul
+        cell = `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;border-radius:6px;font-size:10px;font-weight:800;background:rgba(72,149,239,0.18);color:#4895ef">AS</span>`;
+      } else if(esVac && estaDeVacacionesEn(c, fechaDia)) {
+        // Día dentro del periodo de vacaciones: mostrar V
+        cell = `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;border-radius:6px;font-size:11px;font-weight:800;background:rgba(255,190,11,0.18);color:#ffbe0b">V</span>`;
       } else {
-        const bg = isC ? 'rgba(0,214,143,0.18)' : isComp ? 'rgba(255,190,11,0.18)' : 'rgba(255,77,109,0.18)';
-        const color = isC ? '#00d68f' : isComp ? '#ffbe0b' : '#ff4d6d';
-        const label = isC ? 'C' : isComp ? 'CO' : 'L';
-        pill = `<span onclick="toggleCelda('${c.cod}',${d})" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;background:${bg};color:${color}">${label}</span>`;
+        // Día normal (activo, o vacacionista fuera del periodo): mostrar C/L
+        const val = (planData[c.cod]||{})[d];
+        if(val && val !== '—' && val !== 'VAC') {
+          const isC = val==='CORTA', isComp = val==='COMP';
+          const bg = isC ? 'rgba(0,214,143,0.18)' : isComp ? 'rgba(255,190,11,0.18)' : 'rgba(255,77,109,0.18)';
+          const color = isC ? '#00d68f' : isComp ? '#ffbe0b' : '#ff4d6d';
+          const label = isC ? 'C' : isComp ? 'CO' : 'L';
+          if(esVac) {
+            // Conductor en vac pero fuera del periodo: mostrar sin onclick (informativo)
+            cell = `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;border-radius:6px;font-size:12px;font-weight:800;background:${bg};color:${color}">${label}</span>`;
+          } else {
+            cell = `<span onclick="toggleCelda('${c.cod}',${d})" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;background:${bg};color:${color}">${label}</span>`;
+          }
+        } else {
+          cell = '<span style="font-size:11px;color:#64748b">—</span>';
+        }
       }
-      html += `<td style="padding:4px 2px;text-align:center;border-bottom:1px solid rgba(30,45,69,0.4);border-right:1px solid rgba(30,45,69,0.3);background:${rowBg}">${pill}</td>`;
+      html += `<td style="padding:4px 2px;text-align:center;border-bottom:1px solid rgba(30,45,69,0.4);border-right:1px solid rgba(30,45,69,0.3);background:${rowBg}">${cell}</td>`;
     });
-    html += `<td style="text-align:center;font-family:monospace;font-weight:800;font-size:13px;color:#00d68f;padding:8px 4px;background:rgba(0,214,143,0.05)">${cortas}${comp?`<span style="color:#ffbe0b;font-size:9px;display:block">+${comp}co</span>`:''}&#8203;</td>`;
-    html += `<td style="text-align:center;font-family:monospace;font-weight:800;font-size:13px;color:#ff4d6d;padding:8px 4px;background:rgba(255,77,109,0.05)">${largas}</td>`;
+    if(esVac) {
+      html += `<td style="text-align:center;font-family:monospace;font-weight:700;font-size:11px;color:#ffbe0b;padding:8px 4px;background:rgba(255,190,11,0.04)">🏖️</td>`;
+      html += `<td style="text-align:center;padding:8px 4px;background:rgba(255,190,11,0.04)"></td>`;
+    } else {
+      html += `<td style="text-align:center;font-family:monospace;font-weight:800;font-size:13px;color:#00d68f;padding:8px 4px;background:rgba(0,214,143,0.05)">${cortas}${comp?`<span style="color:#ffbe0b;font-size:9px;display:block">+${comp}co</span>`:''}&#8203;</td>`;
+      html += `<td style="text-align:center;font-family:monospace;font-weight:800;font-size:13px;color:#ff4d6d;padding:8px 4px;background:rgba(255,77,109,0.05)">${largas}</td>`;
+    }
     html += '</tr>';
   });
   html += '</tbody>';
@@ -1551,7 +1623,7 @@ function buildCond() {
   const activos = conductores.filter(c=>c.estado==='activo' && matchQ(c.cod));
   const vacs = conductores.filter(c=>c.estado==='vac' && matchQ(c.cod));
   const bajas = conductores.filter(c=>c.estado==='baja' && matchQ(c.cod));
-  const hoy = new Date().toISOString().split('T')[0];
+  const hoy = todayISO();
 
   document.getElementById('cond-activos').innerHTML = activos.map(c=>{
     const ausActiva=(ausenciasPuntuales[c.cod]||[]).find(a=>a.ini<=hoy&&a.fin>=hoy);
@@ -1726,22 +1798,54 @@ function tieneAusenciaPuntual(cod, fechaISO) {
   return (ausenciasPuntuales[cod]||[]).some(a => a.ini <= fechaISO && a.fin >= fechaISO);
 }
 
+// Devuelve true si el conductor estará disponible en fechaISO (activo o vuelve ese día de vacaciones/AP)
+function estaDisponibleEn(c, fechaISO) {
+  // Ausencia puntual: NO disponible ese día (misma regla que vacaciones)
+  if(tieneAusenciaPuntual(c.cod, fechaISO)) return false;
+  if(c.estado === 'activo') return true;
+  if(c.estado === 'baja') return false;
+  // vacaciones: disponible a partir del día siguiente a fin
+  if(c.estado === 'vac' && c.vac && c.vac.fin && c.vac.fin !== '?') {
+    const [df,mf,yf] = c.vac.fin.split('/');
+    const finDate = new Date(`${yf}-${mf}-${df}`);
+    finDate.setHours(0,0,0,0);
+    const fechaObj = new Date(fechaISO); fechaObj.setHours(0,0,0,0);
+    return fechaObj > finDate;
+  }
+  return false;
+}
+
+// Devuelve true si el conductor está de vacaciones en fechaISO (según fechas de vac)
+function estaDeVacacionesEn(c, fechaISO) {
+  if(c.estado !== 'vac' || !c.vac) return false;
+  if(!c.vac.ini || c.vac.ini === '—') return true; // sin fecha: asumimos que sí
+  const [di,mi,yi] = c.vac.ini.split('/');
+  const iniDate = new Date(`${yi}-${mi}-${di}`); iniDate.setHours(0,0,0,0);
+  const fechaObj = new Date(fechaISO); fechaObj.setHours(0,0,0,0);
+  if(fechaObj < iniDate) return false;
+  if(!c.vac.fin || c.vac.fin === '?') return true;
+  const [df,mf,yf] = c.vac.fin.split('/');
+  const finDate = new Date(`${yf}-${mf}-${df}`); finDate.setHours(0,0,0,0);
+  return fechaObj <= finDate;
+}
+
 function buildRuta(){
-  const activos=conductores.filter(c=>c.estado==='activo');
   const fechaRD = document.getElementById('rd-fecha').value || mananaISO();
   const diaRD = parseInt(fechaRD.split('-')[2], 10);
 
-  const ausPuntuales = activos.filter(c => tieneAusenciaPuntual(c.cod, fechaRD));
-  const activosRuta = activos.filter(c => !tieneAusenciaPuntual(c.cod, fechaRD));
+  // Conductores disponibles (excluye vac, baja y ausencias puntuales)
+  const activosRuta = conductores.filter(c => estaDisponibleEn(c, fechaRD));
 
   document.getElementById('rd-count').textContent=activosRuta.length;
 
-  const ausentes=conductores.filter(c=>c.estado!=='activo');
-  let alertsHtml = ausentes.map(c=>`
-    <div class="alert y">${c.estado==='vac'?'🏖️':'🏥'} <strong>${c.cod}</strong> — ${c.estado==='vac'?'vacaciones':'baja médica'}</div>`).join('');
-  alertsHtml += ausPuntuales.map(c=>{
-    const aus=(ausenciasPuntuales[c.cod]||[]).find(a=>a.ini<=fechaRD&&a.fin>=fechaRD);
-    return `<div class="alert" style="background:rgba(72,149,239,0.08);border:1px solid rgba(72,149,239,0.25);color:var(--blu)">📅 <strong>${c.cod}</strong> — ${aus.motivo}</div>`;
+  const ausentes=conductores.filter(c=>!estaDisponibleEn(c, fechaRD));
+  let alertsHtml = ausentes.map(c=>{
+    // Distinguir motivo: ausencia puntual, vacaciones, baja
+    const ausPunt=(ausenciasPuntuales[c.cod]||[]).find(a=>a.ini<=fechaRD&&a.fin>=fechaRD);
+    if(ausPunt) {
+      return `<div class="alert" style="background:rgba(72,149,239,0.08);border:1px solid rgba(72,149,239,0.25);color:var(--blu)">📅 <strong>${c.cod}</strong> — ${ausPunt.motivo}</div>`;
+    }
+    return `<div class="alert y">${c.estado==='vac'?'🏖️':'🏥'} <strong>${c.cod}</strong> — ${c.estado==='vac'?'vacaciones':'baja médica'}</div>`;
   }).join('');
   if(tallerList.length > 0) {
     alertsHtml += tallerList.map(t=>`
@@ -2379,7 +2483,7 @@ function toast(msg,err=false){
 // ═══════════════════════════════════════
 // DATE UTILS
 // ═══════════════════════════════════════
-function todayISO(){return new Date().toISOString().split('T')[0];}
+function todayISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function fmtDate(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
 function hoyFmt(){const n=new Date();return`${String(n.getDate()).padStart(2,'0')}/${String(n.getMonth()+1).padStart(2,'0')} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;}
 
@@ -2405,7 +2509,7 @@ loadLS();
 document.getElementById('rd-fecha').value = mananaISO();
 buildDash();
 
-const APP_VERSION = 'v9';
+const APP_VERSION = 'v11';
 const WELCOME_KEY = 'gestorrutas-welcome-' + APP_VERSION;
 if(!localStorage.getItem(WELCOME_KEY)){
   setTimeout(()=>openModal('m-welcome'), 800);
@@ -2426,9 +2530,20 @@ if(!localStorage.getItem(WELCOME_KEY)){
 
       <!-- NOVEDADES EN ROJO GRANDE -->
       <div style="background:rgba(255,77,109,0.08);border:2px solid rgba(255,77,109,0.4);border-radius:12px;padding:14px;margin-bottom:14px">
-        <div style="font-size:13px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🚨 NOVEDADES DE ESTA VERSIÓN</div>
+        <div style="font-size:13px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🚨 NOVEDADES DE ESTA VERSIÓN (v13)</div>
         <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px">
-          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Dos botones de exportar imagen</strong> — En Ruta del día hay ahora <strong style="color:#1a4a8a">🏢 Exportar Mesur</strong> y <strong style="color:var(--grn)">🚛 Exportar Conductores</strong></span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Leyenda en Planificación</strong> — Ahora la tabla muestra: <strong style="color:#00d68f">C</strong>=Corta · <strong style="color:#ff4d6d">L</strong>=Larga · <strong style="color:#ffbe0b">CO</strong>=Compartida · <strong style="color:#ffbe0b">V</strong>=Vacaciones · <strong style="color:#4895ef">AS</strong>=Ausente</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Ausencias puntuales en Dashboard</strong> — Los conductores con ausencia puntual ya aparecen en el apartado "Ausentes/Taller" del dashboard con su motivo</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Disponibles mañana más preciso</strong> — Corregido el cálculo de disponibles para mañana: descuenta correctamente ausencias puntuales y el contador se ajusta en tiempo real al marcar alguien ausente</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Planificación: 16 conductores visibles</strong> — El contador "Conductores" en Planificación ahora muestra correctamente el total de conductores activos + los de vacaciones que aparecen en la tabla</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Fix zona horaria</strong> — Corregido bug que en España (UTC+2) podía calcular mal las fechas de mañana/hoy por desfase UTC</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Planificación: C/L en días sin vacaciones</strong> — Los conductores de vacaciones ya muestran <strong style="color:#00d68f">C</strong>/<strong style="color:#ff4d6d">L</strong> en todos sus días laborables fuera del periodo de vacaciones. El sistema los incluye en el reparto del algoritmo para esos días</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Ausencia = no trabaja</strong> — Los conductores con ausencia puntual (AS) ya NO aparecen en la Ruta del día. Misma regla que vacaciones y bajas. En la planificación su celda muestra <strong style="color:#4895ef">AS</strong> (azul) en los días de ausencia</span></li>
+        </ul>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Planificación: conductor de vacaciones en su sitio</strong> — Ya no aparece al final. Está en orden junto a los demás, con <strong style="color:#ffbe0b">V</strong> en el día de vacaciones y C/L en el resto de días</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Dashboard: disponibles mañana correcto</strong> — Si las vacaciones terminan hoy, el conductor ya cuenta como disponible mañana</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Mensaje más claro</strong> — Ahora dice "termina vacaciones hoy — disponible mañana" en lugar del confuso "vuelve hoy"</span></li>
+          <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Planificación: filas de vacaciones visibles</strong> — Los conductores de vacaciones ya NO desaparecen de la tabla. Sus días aparecen con <strong style="color:#ffbe0b">V</strong> (amarillo) y los de asuntos personales con <strong style="color:#4895ef">AP</strong> (azul). El sistema sabe que están fuera y los muestra en su orden habitual</span></li>
           <li style="display:flex;gap:10px;align-items:flex-start;padding-left:24px"><span style="color:var(--txt2);font-size:13px;line-height:1.5">• <strong style="color:#1a4a8a">Mesur</strong>: solo muestra conductor, ruta y matrícula</span></li>
           <li style="display:flex;gap:10px;align-items:flex-start;padding-left:24px"><span style="color:var(--txt2);font-size:13px;line-height:1.5">• <strong style="color:var(--grn)">Conductores</strong>: incluye todo — bajas, vacaciones, taller, ausencias, etc.</span></li>
           <li style="display:flex;gap:10px;align-items:flex-start"><span style="color:var(--red);font-weight:800;font-size:15px">✦</span><span style="font-size:14px;color:var(--txt);line-height:1.4;font-weight:600"><strong style="color:var(--red)">Compartir directo en Android</strong> — Al exportar sale el menú nativo de compartir: WhatsApp, Gmail, Telegram, etc.</span></li>
@@ -2471,7 +2586,7 @@ if(!localStorage.getItem(WELCOME_KEY)){
       <div style="font-size:12px;color:var(--txt2)">Espero que te guste 😊</div>
     </div>
     <button class="btn btn-p btn-full" onclick="closeModal('m-welcome')" style="margin-bottom:14px">¡Vamos! 🚀</button>
-    <div style="text-align:center;font-size:10px;color:var(--txt2);letter-spacing:1.5px;font-weight:600">GESTORRUTAS PRO · by Mario</div>
+    <div style="text-align:center;font-size:10px;color:var(--txt2);letter-spacing:1.5px;font-weight:600">GESTORRUTAS PRO · v13 · by Mario</div>
   </div>
 </div>
 </body>
