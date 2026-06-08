@@ -1015,21 +1015,14 @@ function saveLS() {
   if(!currentPin) return;
   try {
     const data = getCurrentData();
-    // Guardar en localStorage como respaldo offline
-    localStorage.setItem(getDataKey(currentPin), JSON.stringify(data));
-    // Guardar en Supabase en segundo plano
+    // Solo Supabase — localStorage eliminado para evitar conflictos
     supabaseSave(currentPin, data);
   } catch(e){ console.warn('saveLS error', e); }
 }
 
 function loadLS() {
-  if(!currentPin) return false;
-  try {
-    const raw = localStorage.getItem(getDataKey(currentPin));
-    if(!raw) return false;
-    applyData(JSON.parse(raw));
-    return true;
-  } catch(e){ return false; }
+  // Sin localStorage — los datos vienen solo de Supabase
+  return false;
 }
 
 // ═══════════════════════════════════════
@@ -2483,7 +2476,6 @@ async function entrarConPin(pin, esNuevo) {
   const cloudData = await supabaseLoad(pin);
   if(cloudData) {
     applyData(cloudData);
-    localStorage.setItem(getDataKey(pin), JSON.stringify(getCurrentData()));
     document.getElementById('rd-fecha').value = mananaISO();
     buildDash();
     if(!esNuevo) toast('☁️ Datos sincronizados');
