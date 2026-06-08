@@ -191,6 +191,7 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     <div class="clock-time" id="clock">--:--:--</div>
     <div class="clock-date" id="clock-date">—</div>
   </div>
+  <div id="clock-greeting" style="font-size:12px;font-weight:700;color:var(--txt2);text-align:center;flex:1;padding:0 8px">—</div>
   <div style="font-size:13px;font-weight:800;color:var(--txt)">Gestor<span style="color:var(--grn)">Rutas</span> Pro</div>
 </div>
 
@@ -2314,6 +2315,9 @@ function tick(){
   const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   document.getElementById('clock-date').textContent=`${dias[n.getDay()]} ${n.getDate()} ${meses[n.getMonth()]} ${n.getFullYear()}`;
+  const h=n.getHours();
+  const saludo=h>=6&&h<14?'¡Buenos días, Alejandro! ☕':h>=14&&h<21?'Buenas tardes, Alejandro 😊':'Buenas noches, Alejandro 🌙';
+  document.getElementById('clock-greeting').textContent=saludo;
 }
 setInterval(tick,1000);tick();
 
