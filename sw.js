@@ -1,6 +1,6 @@
 // Cambia este número cada vez que subas una actualización a Netlify
 // Eso fuerza al encargado a recibir la versión nueva automáticamente
-const CACHE = 'gestorrutas-v10';
+const CACHE = 'gestorrutas-v11';
 const ASSETS = ['/'];
 
 self.addEventListener('install', e => {

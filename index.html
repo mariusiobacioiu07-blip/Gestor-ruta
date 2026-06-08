@@ -354,7 +354,7 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
     <button class="btn btn-s btn-sm" onclick="planNavSemana(-1)" style="font-size:18px;padding:8px 14px">‹</button>
     <div style="text-align:center;flex:1">
       <div style="font-size:12px;font-weight:700;color:var(--txt)" id="plan-semana-label">—</div>
-      <div style="font-size:10px;color:var(--txt2)">Semana junio 2026</div>
+      <div style="font-size:10px;color:var(--txt2)" id="plan-semana-mes-label">—</div>
     </div>
     <button class="btn btn-s btn-sm" onclick="planNavSemana(1)" style="font-size:18px;padding:8px 14px">›</button>
   </div>
@@ -994,7 +994,8 @@ function buildDash() {
     const diasTotalesPlan = diasLaborables();
     const hoyDiaA = new Date().getDate();
     const hoyMesA = new Date().getMonth();
-    const diasRestantesPlan = hoyMesA === 5
+    const { mes: _pmA } = planMesRef();
+    const diasRestantesPlan = hoyMesA === _pmA
       ? diasTotalesPlan.filter(d => d > hoyDiaA).length
       : diasTotalesPlan.length;
 
@@ -1176,10 +1177,17 @@ function borrarNota() {
 // ═══════════════════════════════════════
 // PLANIFICACION
 // ═══════════════════════════════════════
+function planMesRef() {
+  // Devuelve {anio, mes} del mes de planificación actual (el mes en curso)
+  const hoy = new Date();
+  return { anio: hoy.getFullYear(), mes: hoy.getMonth() };
+}
 function diasLaborables() {
+  const { anio, mes } = planMesRef();
   const dias = [];
-  for(let d=1; d<=30; d++) {
-    const f = new Date(2026, 5, d);
+  const totalDias = new Date(anio, mes+1, 0).getDate();
+  for(let d=1; d<=totalDias; d++) {
+    const f = new Date(anio, mes, d);
     if(f.getDay()!==0 && f.getDay()!==6) dias.push(d);
   }
   return dias;
@@ -1281,15 +1289,17 @@ function getSemanaActual() {
   const lunes = new Date(refDate); lunes.setDate(refDate.getDate() + diffLunes);
   const viernes = new Date(lunes); viernes.setDate(lunes.getDate() + 4);
   const diasJun = [];
+  const { anio: _anio, mes: _mes } = planMesRef();
+  const _totalDias = new Date(_anio, _mes+1, 0).getDate();
   for(let d = new Date(lunes); d <= viernes; d.setDate(d.getDate()+1)) {
-    if(d.getMonth() === 5 && d.getDate() >= 1 && d.getDate() <= 30) { // junio 2026
+    if(d.getMonth() === _mes && d.getDate() >= 1 && d.getDate() <= _totalDias) {
       diasJun.push(d.getDate());
     }
   }
   // Label de la semana
   const lLabel = `${String(lunes.getDate()).padStart(2,'0')}/${String(lunes.getMonth()+1).padStart(2,'0')}`;
   const vLabel = `${String(viernes.getDate()).padStart(2,'0')}/${String(viernes.getMonth()+1).padStart(2,'0')}`;
-  return { dias: diasJun.filter(d => { const f=new Date(2026,5,d); return f.getDay()!==0&&f.getDay()!==6; }), label: `${lLabel} — ${vLabel}` };
+  return { dias: diasJun.filter(d => { const f=new Date(_anio,_mes,d); return f.getDay()!==0&&f.getDay()!==6; }), label: `${lLabel} — ${vLabel}` };
 }
 
 function renderPlan() {
@@ -1297,11 +1307,17 @@ function renderPlan() {
   const diasTodos = diasLaborables();
   const hoyDia = new Date().getDate();
   const hoyMes = new Date().getMonth();
+  const { mes: _planMes, anio: _planAnio } = planMesRef();
+  const _mesesNombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const elPlanSemMesLabel = document.getElementById('plan-semana-mes-label');
+  if(elPlanSemMesLabel) elPlanSemMesLabel.textContent = `${_mesesNombres[_planMes]} ${_planAnio}`;
 
   let dias, tituloTabla;
   if(planVistaCompleta) {
     dias = diasTodos;
-    tituloTabla = 'Tabla junio 2026 (mes completo)';
+    const { anio: _ta, mes: _tm } = planMesRef();
+    const _meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    tituloTabla = `Tabla ${_meses[_tm]} ${_ta} (mes completo)`;
     document.getElementById('plan-semana-label').textContent = '—';
   } else {
     const sem = getSemanaActual();
@@ -1329,9 +1345,17 @@ function renderPlan() {
   let html = '<thead><tr>';
   html += '<th style="position:sticky;left:0;background:#1a2235;z-index:2;padding:10px 10px;font-size:11px;color:#64748b;text-align:left;border-bottom:1px solid #1e2d45;border-right:1px solid #1e2d45">COD.</th>';
   dias.forEach(d => {
-    const isHoy = d===hoyDia && hoyMes===5;
-    html += `<th style="padding:8px 2px;text-align:center;min-width:48px;font-size:11px;font-weight:700;${isHoy?'color:#ffbe0b;background:rgba(255,190,11,0.10);':'color:#8899aa;'}border-bottom:1px solid #1e2d45;border-right:1px solid #1e2d45">
-      ${String(d).padStart(2,'0')}${isHoy?'<br><span style="font-size:9px;background:#ffbe0b;color:#0a0f1a;border-radius:3px;padding:1px 4px;font-weight:800">HOY</span>':''}
+    const isHoy = d===hoyDia && hoyMes===_planMes;
+    const _diasSem = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    const { anio: _anio2, mes: _mes2 } = planMesRef();
+    const _fObj = new Date(_anio2, _mes2, d);
+    const _nomDia = _diasSem[_fObj.getDay()];
+    const _mes = String(_fObj.getMonth()+1).padStart(2,'0');
+    const _color = isHoy ? 'color:#ffbe0b;background:rgba(255,190,11,0.10);' : 'color:#8899aa;';
+    html += `<th style="padding:6px 2px;text-align:center;min-width:54px;font-size:11px;font-weight:700;${_color}border-bottom:1px solid #1e2d45;border-right:1px solid #1e2d45;line-height:1.4">
+      <div style="font-size:9px;font-weight:600;opacity:0.8">${_nomDia}</div>
+      <div style="font-size:11px;font-weight:800">${String(d).padStart(2,'0')}/${_mes}</div>
+      ${isHoy?'<div><span style="font-size:8px;background:#ffbe0b;color:#0a0f1a;border-radius:3px;padding:1px 4px;font-weight:800">HOY</span></div>':''}
     </th>`;
   });
   html += '<th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:700;color:#00d68f;border-bottom:1px solid #1e2d45;min-width:30px">C</th>';
@@ -2120,7 +2144,8 @@ function showCondStats(cod) {
   let rachaActual = 0, tipoRacha = '';
   const hoyDia = new Date().getDate();
   const hoyMesS = new Date().getMonth();
-  const diasPasadosS = dias.filter(d => hoyMesS === 5 ? d <= hoyDia : false);
+  const { mes: _pmS } = planMesRef();
+  const diasPasadosS = dias.filter(d => hoyMesS === _pmS ? d <= hoyDia : false);
   for(let i = diasPasadosS.length - 1; i >= 0; i--) {
     const v = datos[diasPasadosS[i]] || datos[String(diasPasadosS[i])];
     if(!v || v === '—') break;
