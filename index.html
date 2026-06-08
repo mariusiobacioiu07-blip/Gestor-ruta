@@ -1759,8 +1759,28 @@ function altaConfirmada(){
   historial.unshift({fecha:hoyFmt(),cod,tipo:'alta',det:`Alta — venía de ${c.estado==='baja'?'baja médica':'vacaciones'}`});
   c.estado='activo'; c.vac=null; c.bajaDesde=null;
   conductores.sort((a,b)=>a.cod.localeCompare(b.cod, undefined, {numeric:true}));
+
+  // Limpiar los días VAC del conductor en planData y reasignar C/L
+  if(planData[cod]) {
+    const hoyNum = new Date().getDate();
+    const diasVac = Object.keys(planData[cod]).filter(d => planData[cod][d] === 'VAC' && parseInt(d) >= hoyNum);
+    if(diasVac.length > 0) {
+      const activos = conductores.filter(c2=>c2.estado==='activo');
+      diasVac.forEach(dStr => {
+        const d = parseInt(dStr);
+        const totalCortas = cortasDia[d] ?? DEFAULT_CORTAS;
+        const cortasYa = activos.filter(c2=>c2.cod!==cod).filter(c2=>{
+          const v=(planData[c2.cod]||{})[d];
+          return v==='CORTA'||v==='COMP';
+        }).length;
+        if(cod==='JS228'){ planData[cod][d]='CORTA'; return; }
+        planData[cod][d] = cortasYa < totalCortas ? 'CORTA' : 'LARGA';
+      });
+    }
+  }
+
   closeModal('m-confirmar-alta');
-  saveLS(); buildCond(); buildDash();
+  saveLS(); buildCond(); buildDash(); if(planGenerado) renderPlan();
   toast('✅ '+cod+' dado de alta');
 }
 
