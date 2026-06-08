@@ -728,6 +728,32 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   </div>
 </div>
 
+<!-- Modal confirmar despido -->
+<div class="modal-ov" id="m-confirmar-desp">
+  <div class="modal">
+    <div class="modal-title">&#x1F6AA; <em>Despedir conductor</em></div>
+    <input type="hidden" id="desp-cod">
+    <p id="desp-modal-desc" style="font-size:14px;color:var(--txt2);margin-bottom:20px;line-height:1.5"></p>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-confirmar-desp')">Cancelar</button>
+      <button class="btn btn-r" onclick="closeModal('m-confirmar-desp');despedirConductor(document.getElementById('desp-cod').value)">&#x1F6AA; Sí, despedir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmar alta -->
+<div class="modal-ov" id="m-confirmar-alta">
+  <div class="modal">
+    <div class="modal-title" id="alta-modal-title">&#x2705; Alta</div>
+    <input type="hidden" id="alta-cod">
+    <p id="alta-modal-desc" style="font-size:14px;color:var(--txt2);margin-bottom:20px;line-height:1.5"></p>
+    <div class="modal-actions">
+      <button class="btn btn-s" onclick="closeModal('m-confirmar-alta')">Cancelar</button>
+      <button class="btn btn-p" onclick="altaConfirmada()">&#x2705; Sí, dar de alta</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal confirmar borrar historial -->
 <div class="modal-ov" id="m-confirmar-hist">
   <div class="modal">
@@ -1562,17 +1588,29 @@ function guardarBaja(){
 function alta(cod){
   const c=conductores.find(x=>x.cod===cod);
   if(!c)return;
+  const origen=c.estado==='baja'?'baja médica':'vacaciones';
+  document.getElementById('alta-cod').value=cod;
+  document.getElementById('alta-modal-title').innerHTML=`✅ Alta — <em>${cod}</em>`;
+  document.getElementById('alta-modal-desc').textContent=`¿Confirmas que ${cod} vuelve de ${origen} y pasa a activo?`;
+  openModal('m-confirmar-alta');
+}
+
+function altaConfirmada(){
+  const cod=document.getElementById('alta-cod').value;
+  const c=conductores.find(x=>x.cod===cod);
+  if(!c)return;
   historial.unshift({fecha:hoyFmt(),cod,tipo:'alta',det:`Alta — venía de ${c.estado==='baja'?'baja médica':'vacaciones'}`});
   c.estado='activo'; c.vac=null; c.bajaDesde=null;
   conductores.sort((a,b)=>a.cod.localeCompare(b.cod, undefined, {numeric:true}));
+  closeModal('m-confirmar-alta');
   saveLS(); buildCond(); buildDash();
   toast('✅ '+cod+' dado de alta');
 }
 
 function confirmarDespido(cod){
-  if(confirm(`¿Seguro que quieres eliminar a ${cod}? Esta acción no se puede deshacer.`)){
-    despedirConductor(cod);
-  }
+  document.getElementById('desp-cod').value=cod;
+  document.getElementById('desp-modal-desc').textContent=`¿Seguro que quieres eliminar a ${cod}? Esta acción no se puede deshacer.`;
+  openModal('m-confirmar-desp');
 }
 
 function despedirConductor(cod){
