@@ -194,7 +194,7 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   <div style="font-size:13px;font-weight:800;color:var(--txt)">Gestor<span style="color:var(--grn)">Rutas</span> Pro</div>
 </div>
 
-<div style="height:52px"></div>
+<div style="height:52px;flex-shrink:0"></div>
 
 <!-- ═══ DASHBOARD ═══ -->
 <div class="screen on" id="sc-dash">
@@ -221,6 +221,10 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   <div class="screen-header" style="display:flex;justify-content:space-between;align-items:center">
     <div class="screen-title">Conductores</div>
     <button class="btn btn-p btn-sm" onclick="openModal('m-new-cond')">+ Nuevo</button>
+  </div>
+  <div style="position:relative;margin-bottom:12px">
+    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none">🔍</span>
+    <input type="search" id="cond-search" class="form-input" placeholder="Buscar JS..." oninput="buildCond()" style="padding-left:38px;padding-top:10px;padding-bottom:10px;font-size:14px">
   </div>
   <div id="cond-activos"></div>
   <div id="cond-otros"></div>
@@ -425,7 +429,7 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
       </div>
       <div style="background:var(--s2);border-radius:8px;padding:10px 12px;border-left:3px solid var(--blu)">
         <div style="font-size:11px;font-weight:700;color:var(--blu);margin-bottom:4px">Resumen del mes y ranking:</div>
-        <div style="color:var(--txt2);font-size:12px">Progreso de junio, los 3 conductores con más largas este mes y el estado de la flota (propios / alquiler / taller).</div>
+        <div style="color:var(--txt2);font-size:12px">Progreso del mes, los 3 conductores con más largas este mes y el estado de la flota (propios / alquiler / taller).</div>
       </div>
     </div>
   </div>
@@ -482,7 +486,7 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
   <div class="card" style="margin-bottom:12px">
     <div class="card-head" style="background:rgba(255,190,11,0.06)">📅 Planificación Mensual</div>
     <div style="padding:14px 16px;font-size:13px;color:var(--txt);line-height:1.7">
-      <p style="margin-bottom:10px">Tabla de cortas y largas para todo junio. Se genera automáticamente pero puedes editar cualquier celda.</p>
+      <p style="margin-bottom:10px">Tabla de cortas y largas para todo el mes. Se genera automáticamente pero puedes editar cualquier celda.</p>
       <div style="background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--yel)">
         <div style="font-size:11px;font-weight:700;color:var(--yel);margin-bottom:4px">Vista semanal (por defecto):</div>
         <div style="color:var(--txt2);font-size:12px">Muestra la semana actual. Usa las flechas ‹ › para ir a la semana anterior o siguiente. Toca "📅 Ver mes completo" para ver todos los días de junio a la vez.</div>
@@ -579,7 +583,13 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
 <div class="modal-ov" id="m-new-cond">
   <div class="modal">
     <div class="modal-title">Nuevo <em>conductor</em></div>
-    <div class="form-g"><label class="form-l">Código JS</label><input type="text" class="form-input" id="nc-cod" placeholder="JS999"></div>
+    <div class="form-g">
+      <label class="form-l">Código JS</label>
+      <div style="display:flex;align-items:center;gap:0">
+        <span style="background:var(--s3);border:1px solid var(--brd);border-right:none;padding:12px 10px;border-radius:10px 0 0 10px;font-size:14px;font-weight:800;color:var(--grn);font-family:monospace;line-height:1">JS</span>
+        <input type="number" inputmode="numeric" min="1" max="9999" class="form-input" id="nc-cod" placeholder="300" style="border-radius:0 10px 10px 0;border-left:none">
+      </div>
+    </div>
     <div class="form-g"><label class="form-l">Matrícula</label><input type="text" class="form-input" id="nc-mat" placeholder="0000ABC (opcional)"></div>
     <div class="form-g"><label class="form-l">Estado</label>
       <select class="form-input" id="nc-estado"><option value="activo">ACTIVO</option><option value="vac">VACACIONES</option><option value="baja">BAJA MÉDICA</option></select>
@@ -1034,7 +1044,7 @@ function buildDash() {
   document.getElementById('dash-disp').innerHTML=`
     <div style="padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:12px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px">Progreso junio</span>
+        <span style="font-size:12px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:1px">Progreso ${new Date().toLocaleString('es',{month:'long'})}</span>
         <span style="font-size:12px;color:var(--grn);font-weight:800">${diasPasados}/${diasTotales.length} días</span>
       </div>
       <div style="height:8px;background:var(--s3);border-radius:4px;overflow:hidden;margin-bottom:8px">
@@ -1260,7 +1270,7 @@ function toggleCelda(cod, dia) {
   planData[cod][dia] = nuevo;
   // Registrar en historial solo cambios manuales
   historial.unshift({fecha:hoyFmt(), cod, tipo:'manual',
-    det:`Planif. día ${String(dia).padStart(2,'0')}/06: ${anterior} → ${nuevo}${nuevo==='COMP'?' (ruta compartida/libre)':''}`});
+    det:`Planif. día ${String(dia).padStart(2,'0')}/${String(new Date().getMonth()+1).padStart(2,'0')}: ${anterior} → ${nuevo}${nuevo==='COMP'?' (ruta compartida/libre)':''}`});
   saveLS(); renderPlan();
 }
 
@@ -1442,9 +1452,12 @@ function buildPlan() {
 // CONDUCTORES
 // ═══════════════════════════════════════
 function buildCond() {
-  const activos = conductores.filter(c=>c.estado==='activo');
-  const vacs = conductores.filter(c=>c.estado==='vac');
-  const bajas = conductores.filter(c=>c.estado==='baja');
+  const q = (document.getElementById('cond-search')?.value || '').trim().toUpperCase();
+  const matchQ = cod => !q || cod.includes(q) || cod.replace('JS','').includes(q);
+
+  const activos = conductores.filter(c=>c.estado==='activo' && matchQ(c.cod));
+  const vacs = conductores.filter(c=>c.estado==='vac' && matchQ(c.cod));
+  const bajas = conductores.filter(c=>c.estado==='baja' && matchQ(c.cod));
   const hoy = new Date().toISOString().split('T')[0];
 
   document.getElementById('cond-activos').innerHTML = activos.map(c=>{
@@ -1491,14 +1504,16 @@ function buildCond() {
 }
 
 function addConductor() {
-  const cod = document.getElementById('nc-cod').value.trim().toUpperCase();
+  const numVal = document.getElementById('nc-cod').value.trim();
+  if(!numVal || isNaN(numVal) || parseInt(numVal) < 1){toast('⚠️ Introduce un número válido',true);return;}
+  const cod = 'JS' + parseInt(numVal);
   const mat = document.getElementById('nc-mat').value.trim().toUpperCase() || '—';
   const estado = document.getElementById('nc-estado').value;
-  if(!cod){toast('⚠️ Introduce un código',true);return;}
-  if(conductores.find(c=>c.cod===cod)){toast('⚠️ Ya existe ese código',true);return;}
+  if(conductores.find(c=>c.cod===cod)){toast('⚠️ Ya existe '+cod,true);return;}
   conductores.push({cod,mat,estado,vac:null,bajaDesde:null});
   conductores.sort((a,b)=>a.cod.localeCompare(b.cod, undefined, {numeric:true}));
   historial.unshift({fecha:hoyFmt(),cod,tipo:'alta',det:'Nuevo conductor añadido'});
+  document.getElementById('nc-cod').value='';
   closeModal('m-new-cond');
   saveLS(); buildCond(); buildDash();
   toast('✅ '+cod+' añadido');
@@ -1649,8 +1664,8 @@ function buildRuta(){
         const alq=camionesAlquiler.has(m);
         return `<option value="${m}"${m===st.matricula?' selected':''}>${m}${alq?' ★':''}</option>`;
       }).join('');
-    const rutaOpts=rutas.map(r=>`<option${r===st.ruta?' selected':''}>${r}</option>`).join('');
-    const ruta2Opts='<option value="">+2ª ruta</option>'+rutas.map(r=>`<option${r===st.ruta2?' selected':''}>${r}</option>`).join('');
+    const rutaOpts=rutas.map(r=>`<option${r===st.ruta?' selected':''}>${r}</option>`).join('')+'<option value="__nueva__">＋ Nueva ruta…</option>';
+    const ruta2Opts='<option value="">+2ª ruta</option>'+rutas.map(r=>`<option${r===st.ruta2?' selected':''}>${r}</option>`).join('')+'<option value="__nueva__">＋ Nueva ruta…</option>';
     const tieneRuta2=!!st.ruta2;
     const ayOpts=['NO','SÍ'].map(a=>`<option${st.ayudante===a?' selected':''}>${a}</option>`).join('');
     const jsOpts=activosRuta.filter(x=>x.cod!==c.cod).map(x=>`<option${st.ayudanteJS===x.cod?' selected':''}>${x.cod}</option>`).join('');
@@ -1689,6 +1704,27 @@ function buildRuta(){
 
 function upRD(el){
   const cod=el.dataset.cod, f=el.dataset.f;
+
+  // Opción "Nueva ruta"
+  if(el.value === '__nueva__') {
+    const nombre = prompt('Nombre de la nueva ruta (se guardará para siempre):');
+    if(nombre && nombre.trim()) {
+      const n = nombre.trim().toUpperCase();
+      if(!rutas.includes(n)) {
+        rutas.push(n);
+        saveLS();
+        toast('✅ Ruta "'+n+'" añadida');
+      }
+      rdState[cod][f] = n;
+      saveLS();
+      buildRuta();
+    } else {
+      // Canceló: restaurar valor anterior
+      buildRuta();
+    }
+    return;
+  }
+
   rdState[cod][f]=el.value;
   if(f==='ayudante'){const d=document.getElementById('ay-'+cod);if(d)d.style.display=el.value==='SÍ'?'block':'none';}
   if(f==='matricula' && el.value){
@@ -2250,7 +2286,8 @@ loadLS();
 document.getElementById('rd-fecha').value = mananaISO();
 buildDash();
 
-const WELCOME_KEY = 'gestorrutas-welcome-v8';
+const APP_VERSION = 'v9';
+const WELCOME_KEY = 'gestorrutas-welcome-' + APP_VERSION;
 if(!localStorage.getItem(WELCOME_KEY)){
   setTimeout(()=>openModal('m-welcome'), 800);
   localStorage.setItem(WELCOME_KEY,'1');
