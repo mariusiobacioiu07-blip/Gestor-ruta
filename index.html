@@ -197,6 +197,49 @@ body{font-family:system-ui,-apple-system,sans-serif;color:var(--txt);}
 
 <div style="height:52px;flex-shrink:0"></div>
 
+<div id="pin-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:999;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+  <div style="width:100%;max-width:340px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-size:52px;margin-bottom:12px">🔐</div>
+      <div style="font-size:22px;font-weight:800;color:var(--txt)">GestorRutas <span style="color:var(--grn)">Pro</span></div>
+      <div style="font-size:13px;color:var(--txt2);margin-top:6px">Introduce tu PIN o crea uno nuevo</div>
+    </div>
+
+    <div style="background:var(--s1);border:1px solid var(--brd);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:6px">Tu PIN</div>
+        <input type="password" inputmode="numeric" id="pin-input" class="form-input" placeholder="Ej: 1234" maxlength="10"
+          onkeydown="if(event.key==='Enter'){document.getElementById('pin-btn-entrar').style.display!='none'?document.getElementById('pin-btn-entrar').click():document.getElementById('pin-btn-confirmar').click()}"
+          style="font-size:22px;letter-spacing:6px;text-align:center">
+      </div>
+
+      <div id="pin-confirm-label" style="display:none">
+        <div style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:6px">Confirma tu PIN</div>
+        <input type="password" inputmode="numeric" id="pin-confirm" class="form-input" placeholder="Repite el PIN" maxlength="10"
+          onkeydown="if(event.key==='Enter')confirmarPin()"
+          style="display:none;font-size:22px;letter-spacing:6px;text-align:center">
+      </div>
+
+      <div id="pin-error" style="font-size:12px;color:var(--red);text-align:center;min-height:16px"></div>
+
+      <button id="pin-btn-entrar" class="btn btn-p btn-full" onclick="entrarConPin(document.getElementById('pin-input').value.trim(), false)" style="font-size:15px;padding:14px">
+        Entrar →
+      </button>
+      <button id="pin-btn-nuevo" class="btn btn-s btn-full" onclick="mostrarConfirmar()" style="font-size:13px">
+        Primera vez — Crear PIN nuevo
+      </button>
+      <button id="pin-btn-confirmar" class="btn btn-p btn-full" onclick="confirmarPin()" style="display:none;font-size:15px;padding:14px">
+        ✅ Confirmar y entrar
+      </button>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--txt2)">
+      Cada PIN tiene sus propios datos separados en la nube
+    </div>
+  </div>
+</div>
+
+
 <!-- ═══ DASHBOARD ═══ -->
 <div class="screen on" id="sc-dash">
   <div class="screen-header">
@@ -2412,8 +2455,18 @@ async function initApp() {
 }
 
 function mostrarPantallaPin() {
-  document.getElementById('pin-overlay').style.display = 'flex';
-  document.getElementById('pin-input').focus();
+  const ov = document.getElementById('pin-overlay');
+  ov.style.display = 'flex';
+  // Reset formulario completo
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-confirm').value = '';
+  document.getElementById('pin-confirm').style.display = 'none';
+  document.getElementById('pin-confirm-label').style.display = 'none';
+  document.getElementById('pin-btn-entrar').style.display = 'block';
+  document.getElementById('pin-btn-nuevo').style.display = 'block';
+  document.getElementById('pin-btn-confirmar').style.display = 'none';
+  document.getElementById('pin-error').textContent = '';
+  setTimeout(()=>{ try{ document.getElementById('pin-input').focus(); }catch(e){} }, 300);
 }
 
 async function entrarConPin(pin, esNuevo) {
@@ -2470,8 +2523,10 @@ function mostrarConfirmar() {
 }
 
 function cambiarPin() {
+  if(!confirm('¿Cerrar sesión y cambiar de PIN?')) return;
   localStorage.removeItem(getPinKey());
-  location.reload();
+  currentPin = null;
+  mostrarPantallaPin();
 }
 
 initApp();
@@ -2539,47 +2594,5 @@ initApp();
   </div>
 </div>
 <!-- ═══ PIN OVERLAY ═══ -->
-<div id="pin-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:999;flex-direction:column;align-items:center;justify-content:center;padding:32px">
-  <div style="width:100%;max-width:340px">
-    <div style="text-align:center;margin-bottom:32px">
-      <div style="font-size:52px;margin-bottom:12px">🔐</div>
-      <div style="font-size:22px;font-weight:800;color:var(--txt)">GestorRutas <span style="color:var(--grn)">Pro</span></div>
-      <div style="font-size:13px;color:var(--txt2);margin-top:6px">Introduce tu PIN o crea uno nuevo</div>
-    </div>
-
-    <div style="background:var(--s1);border:1px solid var(--brd);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px">
-      <div>
-        <div style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:6px">Tu PIN</div>
-        <input type="password" inputmode="numeric" id="pin-input" class="form-input" placeholder="Ej: 1234" maxlength="10"
-          onkeydown="if(event.key==='Enter'){document.getElementById('pin-btn-entrar').style.display!='none'?document.getElementById('pin-btn-entrar').click():document.getElementById('pin-btn-confirmar').click()}"
-          style="font-size:22px;letter-spacing:6px;text-align:center">
-      </div>
-
-      <div id="pin-confirm-label" style="display:none">
-        <div style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:6px">Confirma tu PIN</div>
-        <input type="password" inputmode="numeric" id="pin-confirm" class="form-input" placeholder="Repite el PIN" maxlength="10"
-          onkeydown="if(event.key==='Enter')confirmarPin()"
-          style="display:none;font-size:22px;letter-spacing:6px;text-align:center">
-      </div>
-
-      <div id="pin-error" style="font-size:12px;color:var(--red);text-align:center;min-height:16px"></div>
-
-      <button id="pin-btn-entrar" class="btn btn-p btn-full" onclick="entrarConPin(document.getElementById('pin-input').value.trim(), false)" style="font-size:15px;padding:14px">
-        Entrar →
-      </button>
-      <button id="pin-btn-nuevo" class="btn btn-s btn-full" onclick="mostrarConfirmar()" style="font-size:13px">
-        Primera vez — Crear PIN nuevo
-      </button>
-      <button id="pin-btn-confirmar" class="btn btn-p btn-full" onclick="confirmarPin()" style="display:none;font-size:15px;padding:14px">
-        ✅ Confirmar y entrar
-      </button>
-    </div>
-
-    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--txt2)">
-      Cada PIN tiene sus propios datos separados en la nube
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
