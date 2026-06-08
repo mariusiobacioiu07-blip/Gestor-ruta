@@ -954,7 +954,6 @@ async function supabaseSave(pin, data) {
   try {
     const id = await hashPin(pin);
     const body = JSON.stringify({ id, data, updated_at: new Date().toISOString() });
-    // Intentar UPSERT (crea o actualiza)
     const res = await fetch(`${SUPABASE_URL}/rest/v1/gestorrutas`, {
       method: 'POST',
       headers: {
@@ -965,8 +964,17 @@ async function supabaseSave(pin, data) {
       },
       body
     });
+    if(res.ok) {
+      toast('☁️ Guardado ✓');
+    } else {
+      const txt = await res.text();
+      toast('❌ Error guardado: ' + res.status + ' ' + txt, true);
+    }
     return res.ok;
-  } catch(e) { console.warn('Supabase save error:', e); return false; }
+  } catch(e) {
+    toast('❌ Error red: ' + e.message, true);
+    return false;
+  }
 }
 
 async function supabaseLoad(pin) {
@@ -1011,12 +1019,12 @@ function applyData(d) {
   if(d.ausenciasPuntuales) Object.assign(ausenciasPuntuales, d.ausenciasPuntuales);
 }
 
-function saveLS() {
+async function saveLS() {
   if(!currentPin) return;
   try {
     const data = getCurrentData();
     // Solo Supabase — localStorage eliminado para evitar conflictos
-    supabaseSave(currentPin, data);
+    await supabaseSave(currentPin, data);
   } catch(e){ console.warn('saveLS error', e); }
 }
 
